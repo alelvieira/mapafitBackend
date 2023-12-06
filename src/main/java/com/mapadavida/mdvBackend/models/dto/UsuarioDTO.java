@@ -18,8 +18,7 @@ import java.sql.Date;
 public class UsuarioDTO {
 
     private Long id;
-    private String nome, email, cpf, telefone, senha;
-    private Date data_nasc;
+    private String nome, email, senha, idade;
     private Endereco endereco;
     private TipoUsuario tipo;
 
@@ -27,9 +26,7 @@ public class UsuarioDTO {
         id = entity.getId();
         nome = entity.getNome();
         email = entity.getEmail();
-        telefone = entity.getTelefone();
-        cpf = entity.getCpf();
-        data_nasc = entity.getData_nasc();
+        idade = entity.getIdade();
         endereco = entity.getEndereco();
         senha = entity.getSenha();
         tipo = entity.getTipoUsuario();

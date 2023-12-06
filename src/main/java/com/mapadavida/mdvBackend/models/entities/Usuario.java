@@ -26,14 +26,8 @@ public class Usuario {
     @Column(name = "email_usuario", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "cpf_usuario", nullable = true, unique = true)
-    private String cpf;
-
-    @Column(name = "telefone_usuario", nullable = true)
-    private String telefone;
-
-    @Column(name = "data_nasc", nullable = true)
-    private Date data_nasc;
+    @Column(name = "idade_usuario", nullable = true)
+    private String idade;
 
     @ManyToOne
     @JoinColumn(name = "id_endereco", referencedColumnName = "id_endereco", nullable = true)
