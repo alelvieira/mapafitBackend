@@ -1,13 +1,19 @@
 package com.mapadavida.mdvBackend.models.dto;
 
-import com.mapadavida.mdvBackend.models.entities.Locais;
-
 import lombok.Getter;
 import lombok.Setter;
-import java.sql.Date;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 public class EnderecoDTO {
+    private Long id;
+    private String rua;
+    private String cidade;
+    private String estado;
+    private String cep;
+    private String coordenada;
+    private LocalDateTime dataCriacao;
 
 }

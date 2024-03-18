@@ -4,32 +4,34 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Entity
 @Table(name = "tb_endereco")
-
 public class Endereco {
+
     @Id
-    @Column(name = "id_endereco")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_endereco")
     private Long id;
 
-    @Column(name = "logradouro", nullable = false)
-    private String logradouro;
+    @Column(name = "rua")
+    private String rua;
 
-    @Column(name = "numero", nullable = false)
-    private Integer numero;
+    @Column(name = "cidade")
+    private String cidade;
 
-    @Column(name = "cep", nullable = false)
+    @Column(name = "estado")
+    private String estado;
+
+    @Column(name = "cep")
     private String cep;
 
-    @Column(name = "bairro", nullable = false)
-    private String bairro;
+    @Column(name = "coordenada")
+    private String coordenada;
 
-    @Column(name = "localidade", nullable = false)
-    private String localidade;
-
-    @Column(name = "uf", nullable = false)
-    private String uf;
+    @Column(name = "data_criacao")
+    private LocalDateTime dataCriacao;
 }

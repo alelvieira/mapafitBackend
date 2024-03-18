@@ -1,11 +1,12 @@
 package com.mapadavida.mdvBackend.controllers;
 
 import com.mapadavida.mdvBackend.models.dto.UsuarioDTO;
+import com.mapadavida.mdvBackend.models.entities.Endereco;
 import com.mapadavida.mdvBackend.models.entities.Usuario;
-import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
+import com.mapadavida.mdvBackend.repositories.EnderecoRepository;
 import com.mapadavida.mdvBackend.repositories.UsuarioRepository;
-import com.mapadavida.mdvBackend.services.EmailService;
 import jakarta.persistence.EntityNotFoundException;
+import org.hibernate.query.sqm.EntityTypeException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
+import java.util.Optional;
 
 @CrossOrigin
 @RestController
@@ -24,21 +25,33 @@ public class UsuarioController{
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private EnderecoRepository enderecoRepository;
     private ModelMapper modelMapper = new ModelMapper();
 
     private byte[] salt = "MDV".getBytes();
 
-    @PostMapping("/login")
-    public ResponseEntity<UsuarioDTO> login(@RequestBody Usuario usu) {
+
+    @PostMapping(value = "/login")
+    public ResponseEntity<Usuario> login(@RequestBody Usuario usu) {
         String passwordHash = criptografar(usu.getSenha());
-
-        Usuario usuario = usuarioRepository.findByEmailAndSenha(usu.getEmail(), passwordHash.toString())
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
-
-        UsuarioDTO usuarioDTO = modelMapper.map(usuario, UsuarioDTO.class);
-
-        return ResponseEntity.status(HttpStatus.OK).body(usuarioDTO);
+        System.out.print('\n'+passwordHash+'\n');
+        Usuario usuario = usuarioRepository.findByEmail(usu.getEmail()).orElse(null);
+        if (usuario != null) {
+        System.out.print(usuario.getSenha()+'\n');
+            usuario = usuarioRepository.findByEmailAndSenha(usu.getEmail(), passwordHash).orElse(null);
+            if (usuario != null) {
+                // UsuarioDTO usuarioDTO = modelMapper.map(usuario, UsuarioDTO.class);
+                return ResponseEntity.ok(usuario);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
+
 
 //    @Autowired
 //    private EmailService emailService;
@@ -77,5 +90,29 @@ public class UsuarioController{
         }
         return sb.toString();
     }
+
+    @PostMapping(value = "/cadastrar")
+    public ResponseEntity<Usuario> cadastrar(@RequestBody Usuario usu) {
+        // Verifica se já existe um usuário com o mesmo e-mail
+        Optional<Usuario> usuarioExistente = usuarioRepository.findByEmail(usu.getEmail());
+        if (usuarioExistente.isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        } else {
+            if (usu.getEndereco() == null){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+            System.out.println(usu.getEndereco());
+            enderecoRepository.save(usu.getEndereco());
+            usu.setSenha(criptografar(usu.getSenha()));
+
+            Usuario usuarioSalvo = usuarioRepository.save(usu);
+
+            return ResponseEntity.ok(usuarioSalvo);
+        }
+    }
+
+
+
+
 
 }
