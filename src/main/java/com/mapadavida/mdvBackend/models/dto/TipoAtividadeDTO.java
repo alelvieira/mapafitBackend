@@ -3,13 +3,9 @@ package com.mapadavida.mdvBackend.models.dto;
 import lombok.Getter;
 import lombok.Setter;
 
-
 @Getter
 @Setter
-public class ConquistasDTO {
-
+public class TipoAtividadeDTO {
+    private Long id;
     private String nome;
-    private Integer pontuacao;
-
-    private Long usuarioId;
 }

@@ -24,4 +24,5 @@ public class Publicacao {
 
     @ManyToOne
     @JoinColumn(name = "id_grupo")
-    private Grupo grupo;}
+    private Grupo grupo;
+}

@@ -64,7 +64,7 @@ public class UsuarioController{
     //      usu.setSenha(passwordHash);
     //      emailService.emailSenha(usu.getEmail(), senha);
     //  }else {
-    //      usu.setSenha(criptografar(usu.getSenha()));
+    //      usu.setSe nha(criptografar(usu.getSenha()));
 //  }
     //      Usuario usuario = usuarioRepository.save(usu);
 //

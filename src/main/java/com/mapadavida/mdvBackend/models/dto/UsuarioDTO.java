@@ -18,7 +18,7 @@ public class UsuarioDTO {
     private String sexo;
     private String token;
     private String idade;
-    private Endereco endereco;
+    private Long enderecoId;
     private TipoUsuario tipoUsuario;
     private String senha;
 

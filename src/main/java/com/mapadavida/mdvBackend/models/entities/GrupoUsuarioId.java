@@ -10,4 +10,5 @@ public class GrupoUsuarioId implements Serializable {
     private Long grupoId;
 
     @Column(name = "id_usuario")
-    private Long usuarioId;}
+    private Long usuarioId;
+}

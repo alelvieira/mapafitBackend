@@ -3,13 +3,12 @@ package com.mapadavida.mdvBackend.models.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 
 @Getter
 @Setter
-public class ConquistasDTO {
+public class GrupoUsuarioIdDTO implements Serializable {
 
-    private String nome;
-    private Integer pontuacao;
-
+    private Long grupoId;
     private Long usuarioId;
 }

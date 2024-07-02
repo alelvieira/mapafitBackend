@@ -19,4 +19,5 @@ public class PontuacaoUsuario {
     private Integer pontuacaoAnterior;
 
     @Column(name = "pontuacao_atual")
-    private Integer pontuacaoAtual;}
+    private Integer pontuacaoAtual;
+}
