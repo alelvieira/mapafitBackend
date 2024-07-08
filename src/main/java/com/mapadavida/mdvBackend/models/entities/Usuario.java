@@ -48,7 +48,5 @@ public class Usuario {
     @Column(name = "senha_usuario", nullable = false)
     private String senha;
 
-    @OneToMany(mappedBy = "usuario")
-    private List<Avaliacao> avaliacoes;
 }
 

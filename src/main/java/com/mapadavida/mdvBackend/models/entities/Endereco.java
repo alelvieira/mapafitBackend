@@ -29,8 +29,11 @@ public class Endereco {
     @Column(name = "cep")
     private String cep;
 
-    @Column(name = "coordenada")
-    private String coordenada;
+    @Column(name = "latitude")
+    private Long latitude;
+
+    @Column(name = "longitude")
+    private Long longitude;
 
     @Column(name = "data_criacao")
     private LocalDateTime dataCriacao;
