@@ -1,68 +1,42 @@
 package com.mapadavida.mdvBackend.services;
 
-import com.mapadavida.mdvBackend.models.dto.LoginDTO;
 import com.mapadavida.mdvBackend.models.dto.UsuarioDTO;
 import com.mapadavida.mdvBackend.models.entities.Usuario;
-import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
 import com.mapadavida.mdvBackend.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
-public class UsuarioService {
+public class UsuarioService implements UserDetailsService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    public Optional<Usuario> getUsuarioById(Long id) {
-        return usuarioRepository.findById(id);
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com o email: " + email));
+
+        return org.springframework.security.core.userdetails.User
+                .withUsername(usuario.getEmail())
+                .password(usuario.getSenha())
+                .authorities("ROLE_USER") // Defina as autoridades conforme necessário
+                .accountExpired(false)
+                .accountLocked(false)
+                .credentialsExpired(false)
+                .disabled(false)
+                .build();
     }
 
     public List<UsuarioDTO> getAllUsuarios() {
-        return usuarioRepository.findAll().stream().map(UsuarioDTO::new).toList();
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        return usuarios.stream()
+                .map(usuario -> new UsuarioDTO())
+                .collect(Collectors.toList());
     }
-
-    public List<Usuario> getUsuariosByTipo(TipoUsuario tipoUsuario) {
-        return usuarioRepository.getUsuarioByTipoUsuario(tipoUsuario);
-    }
-
-    public UsuarioDTO updateUsuario(Long id, Usuario usuarioUpdated) {
-        Optional<Usuario> optionalUsuario = usuarioRepository.findById(id);
-        if (optionalUsuario.isPresent()) {
-            Usuario usuario = optionalUsuario.get();
-            usuario.setNome(usuarioUpdated.getNome());
-            usuario.setEmail(usuarioUpdated.getEmail());
-            usuario.setSexo(usuarioUpdated.getSexo());
-            usuario.setIdade(usuarioUpdated.getIdade());
-            usuario.setEndereco(usuarioUpdated.getEndereco());
-            usuario.setTipoUsuario(usuarioUpdated.getTipoUsuario());
-            usuario.setSenha(usuarioUpdated.getSenha());
-            usuarioRepository.save(usuario);
-            return new UsuarioDTO(usuario);
-        } else {
-            return null;
-        }
-    }
-
-    public void deleteUsuario(Long id) {
-        usuarioRepository.deleteById(id);
-    }
-
-    public Usuario createUser(Usuario user) {
-        return usuarioRepository.save(user);
-    }
-
-    public Optional<Usuario> findByEmail(String email) {
-        return usuarioRepository.findByEmail(email);
-    }
-
-    public UsuarioDTO login(LoginDTO loginDTO){
-        Optional<Usuario> user = usuarioRepository.findByEmailAndSenha(loginDTO.getEmail().toLowerCase(), loginDTO.getSenha());
-        return user.map(UsuarioDTO::new).orElse(null);
-    }
-
 }
