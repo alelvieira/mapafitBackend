@@ -1,13 +1,8 @@
 package com.mapadavida.mdvBackend.models.dto;
 
-import com.mapadavida.mdvBackend.models.entities.Endereco;
-import com.mapadavida.mdvBackend.models.entities.Usuario;
 import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
-import com.mapadavida.mdvBackend.repositories.EnderecoRepository;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Optional;
 
 @Getter
 @Setter
@@ -22,4 +17,28 @@ public class UsuarioDTO {
     private TipoUsuario tipoUsuario;
     private String senha;
 
+    // Getters and setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
 }

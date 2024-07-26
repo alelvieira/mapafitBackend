@@ -1,21 +1,25 @@
 package com.mapadavida.mdvBackend.controllers;
 
 import com.mapadavida.mdvBackend.models.dto.UsuarioDTO;
-import com.mapadavida.mdvBackend.models.entities.Endereco;
 import com.mapadavida.mdvBackend.models.entities.Usuario;
 import com.mapadavida.mdvBackend.repositories.EnderecoRepository;
 import com.mapadavida.mdvBackend.repositories.UsuarioRepository;
-import jakarta.persistence.EntityNotFoundException;
-import org.hibernate.query.sqm.EntityTypeException;
+import com.mapadavida.mdvBackend.services.UsuarioService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Optional;
 
 @CrossOrigin
@@ -24,7 +28,13 @@ import java.util.Optional;
 public class UsuarioController{
 
     @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     @Autowired
     private EnderecoRepository enderecoRepository;
@@ -33,24 +43,46 @@ public class UsuarioController{
     private byte[] salt = "MDV".getBytes();
 
 
-    @PostMapping(value = "/login")
-    public ResponseEntity<Usuario> login(@RequestBody Usuario usu) {
-        String passwordHash = criptografar(usu.getSenha());
-        System.out.print('\n'+passwordHash+'\n');
-        Usuario usuario = usuarioRepository.findByEmail(usu.getEmail()).orElse(null);
-        if (usuario != null) {
-        System.out.print(usuario.getSenha()+'\n');
-            usuario = usuarioRepository.findByEmailAndSenha(usu.getEmail(), passwordHash).orElse(null);
-            if (usuario != null) {
-                // UsuarioDTO usuarioDTO = modelMapper.map(usuario, UsuarioDTO.class);
-                return ResponseEntity.ok(usuario);
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-            }
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    @GetMapping(produces = "application/json")
+    public ResponseEntity<List<UsuarioDTO>> getAllUsuarios() {
+        List<UsuarioDTO> usuarios = usuarioService.getAllUsuarios();
+        return ResponseEntity.ok(usuarios);
+    }
+
+
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Usuario usu) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(usu.getEmail(), usu.getSenha())
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            return ResponseEntity.ok("Login bem-sucedido");
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciais inválidas");
         }
     }
+
+//    @PostMapping(value = "/login")
+//    public ResponseEntity<Usuario> login(@RequestBody Usuario usu) {
+//        String passwordHash = criptografar(usu.getSenha());
+//        System.out.print('\n'+passwordHash+'\n');
+//        Usuario usuario = usuarioRepository.findByEmail(usu.getEmail()).orElse(null);
+//        if (usuario != null) {
+//        System.out.print(usuario.getSenha()+'\n');
+//            usuario = usuarioRepository.findByEmailAndSenha(usu.getEmail(), passwordHash).orElse(null);
+//            if (usuario != null) {
+//                // UsuarioDTO usuarioDTO = modelMapper.map(usuario, UsuarioDTO.class);
+//                return ResponseEntity.ok(usuario);
+//            } else {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+//            }
+//        } else {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+//        }
+//    }
 
 
 //    @Autowired
