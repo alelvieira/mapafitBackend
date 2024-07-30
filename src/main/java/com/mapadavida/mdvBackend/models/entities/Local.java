@@ -6,10 +6,9 @@ import lombok.Setter;
 
 import java.util.List;
 
-
-@Entity
 @Getter
 @Setter
+@Entity
 @Table(name = "tb_locais")
 public class Local {
 
@@ -17,7 +16,7 @@ public class Local {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "nome")
+    @Column(name = "nome", nullable = false)
     private String nome;
 
     @OneToMany(mappedBy = "local")
@@ -30,9 +29,19 @@ public class Local {
     private boolean aprovado = false;
 
     @OneToOne
+    @JoinColumn(name = "id_endereco")
     private Endereco endereco;
 
     @ManyToOne
+    @JoinColumn(name = "id_tipo_atividade")
     private TipoAtividade tipoAtividade;
-}
 
+    // Construtor padrão
+    public Local() {
+    }
+
+    // Construtor com parâmetro para inicializar o ID
+    public Local(Long id) {
+        this.id = id;
+    }
+}

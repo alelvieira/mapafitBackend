@@ -28,7 +28,7 @@ public class Usuario {
     @Column(name = "email_usuario", nullable = true, unique = true)
     private String email;
 
-    @Column(name = "sexo_usuario", unique = true)
+    @Column(name = "sexo_usuario")
     private String sexo;
 
     @Column(name = "token_usuario", nullable = false, unique = true)
@@ -48,5 +48,7 @@ public class Usuario {
     @Column(name = "senha_usuario", nullable = false)
     private String senha;
 
+    @OneToMany(mappedBy = "usuario")
+    private List<Avaliacao> avaliacoes;
 }
 
