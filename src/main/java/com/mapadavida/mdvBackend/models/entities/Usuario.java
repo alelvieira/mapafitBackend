@@ -6,10 +6,8 @@ import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.util.List;
-
-
-import java.sql.Date;
 
 @Getter
 @Setter
@@ -28,7 +26,7 @@ public class Usuario {
     @Column(name = "email_usuario", nullable = true, unique = true)
     private String email;
 
-    @Column(name = "sexo_usuario", unique = true)
+    @Column(name = "sexo_usuario")
     private String sexo;
 
     @Column(name = "token_usuario", nullable = false, unique = true)
@@ -50,5 +48,13 @@ public class Usuario {
 
     @OneToMany(mappedBy = "usuario")
     private List<Avaliacao> avaliacoes;
-}
 
+    // Construtor padrão
+    public Usuario() {
+    }
+
+    // Construtor com parâmetro para inicializar o ID
+    public Usuario(Long id) {
+        this.id = id;
+    }
+}
