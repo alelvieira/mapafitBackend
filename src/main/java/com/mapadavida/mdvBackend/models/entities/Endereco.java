@@ -30,10 +30,10 @@ public class Endereco {
     private String cep;
 
     @Column(name = "latitude")
-    private Long latitude;
+    private String latitude;
 
     @Column(name = "longitude")
-    private Long longitude;
+    private String longitude;
 
     @Column(name = "data_criacao")
     private LocalDateTime dataCriacao;

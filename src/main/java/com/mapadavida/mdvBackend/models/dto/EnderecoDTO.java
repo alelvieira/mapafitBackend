@@ -13,8 +13,8 @@ public class EnderecoDTO {
     private String cidade;
     private String estado;
     private String cep;
-    private Long latitude;
-    private Long longitude;
+    private String latitude;
+    private String longitude;
     private LocalDateTime dataCriacao;
 
 }
