@@ -2,14 +2,17 @@ package com.mapadavida.mdvBackend.controllers;
 
 import com.mapadavida.mdvBackend.models.entities.Endereco;
 import com.mapadavida.mdvBackend.models.entities.Local;
+import com.mapadavida.mdvBackend.models.entities.Usuario;
 import com.mapadavida.mdvBackend.repositories.EnderecoRepository;
 import com.mapadavida.mdvBackend.repositories.LocaisRepository;
+import com.mapadavida.mdvBackend.services.LocaisService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -22,8 +25,19 @@ public class LocaisController {
     private LocaisRepository locaisRepository;
 
     @Autowired
+    private LocaisService locaisService;
+
+    @Autowired
     private EnderecoRepository enderecoRepository;
+
     private ModelMapper modelMapper = new ModelMapper();
+
+
+    @GetMapping
+    public ResponseEntity<List<Local>> getAllUsuarios() {
+        List<Local> locais = locaisService.getLocais();
+        return ResponseEntity.ok(locais);
+    }
 
     @PostMapping(value = "/consultar")
     public ResponseEntity<Optional<Local>> consultar(@RequestBody Endereco endereco) {

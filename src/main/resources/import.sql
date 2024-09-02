@@ -34,4 +34,5 @@ INSERT INTO public.tb_usuario (nome_usuario, idade_usuario, sexo_usuario, tipo_u
 VALUES
     ('Maria', 80, 'Feminino', 'CADASTRADO', 'd9015ac639774caa148c8860f06f0d0092a0dfb3a851a8e04bc5887e79c2ae2b', 'TOKENDAMENINAALI', 'maria@email.com', 1);
 
-
+INSERT INTO public.tb_locais (nome, aprovado, endereco_id, tipo_atividade_id )
+        VALUES ('Teste de local', true, 1, 1)
