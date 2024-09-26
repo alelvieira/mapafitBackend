@@ -30,7 +30,14 @@ public class Local {
     @JoinColumn(name = "tipo_atividade_id")
     private TipoAtividade tipoAtividade;
 
-    public Local(Long id) {
-        this.id = id;
-    }
+    @ManyToOne
+    @JoinColumn(name = "tipo_acesso_id")
+    private TipoAcesso tipoAcesso;
+
+    @Column(name = "horarios_funcionamento")
+    private String horarios_funcionamento;
+
+    @Column(name = "informacoes_adicionais")
+    private String informacoes_adicionais;
+
 }
