@@ -3,6 +3,7 @@ package com.mapadavida.mdvBackend.models.dto;
 import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.beans.BeanUtils;
 
 @Getter
 @Setter
@@ -15,28 +16,7 @@ public class UsuarioDTO {
     private Endereco endereco;
     private TipoUsuario tipoUsuario;
 
-    // Getters and setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
+    public UsuarioDTO(Usuario usuario) {
+        BeanUtils.copyProperties(usuario, this);
     }
 }
