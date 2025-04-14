@@ -1,5 +1,6 @@
 package com.mapadavida.mdvBackend.models.entities;
 
+import com.mapadavida.mdvBackend.models.dto.LocalDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,20 +10,20 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "tb_locais")
+@Table(name = "tb_local")
 public class Local {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "nome", nullable = false)
+    @Column(nullable = false)
     private String nome;
 
-    @Column(name = "aprovado")
+    @Column(name = "aprovado", nullable = false)
     private boolean aprovado = false;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "endereco_id")
     private Endereco endereco;
 
@@ -34,10 +35,32 @@ public class Local {
     @JoinColumn(name = "tipo_acesso_id")
     private TipoAcesso tipoAcesso;
 
-    @Column(name = "horarios_funcionamento")
-    private String horarios_funcionamento;
+    @ManyToOne
+    @JoinColumn(name = "tipo_local_id")
+    private TipoLocal tipoLocal;
 
-    @Column(name = "informacoes_adicionais")
-    private String informacoes_adicionais;
+    private String horariosFuncionamento;
+    private String informacoesAdicionais;
 
+    @OneToMany(mappedBy = "local", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Avaliacao> avaliacoes;
+
+    @OneToMany(mappedBy = "local", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Checkin> checkins;
+
+    public Local() {}
+
+    public Local(LocalDTO localDTO, Endereco endereco, TipoAtividade tipoAtividade, TipoAcesso tipoAcesso, TipoLocal tipoLocal) {
+        if (localDTO != null) {
+            this.id = localDTO.getId();
+            this.nome = localDTO.getNome();
+            this.aprovado = localDTO.isAprovado();
+            this.horariosFuncionamento = localDTO.getHorariosFuncionamento();
+            this.informacoesAdicionais = localDTO.getInformacoesAdicionais();
+        }
+        this.endereco = endereco;
+        this.tipoAtividade = tipoAtividade;
+        this.tipoAcesso = tipoAcesso;
+        this.tipoLocal = tipoLocal;
+    }
 }

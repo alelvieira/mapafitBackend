@@ -21,8 +21,4 @@ public class TipoAtividade {
     public TipoAtividade() {
     }
 
-    // Construtor com parâmetro para inicializar o ID
-    public TipoAtividade(Long id) {
-        this.id = id;
-    }
 }

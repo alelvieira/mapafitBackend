@@ -2,14 +2,14 @@ package com.mapadavida.mdvBackend.models.entities;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.mapadavida.mdvBackend.models.dto.UsuarioDTO;
 import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.beans.BeanUtils;
+
 import java.util.List;
-
-
-import java.sql.Date;
 
 @Getter
 @Setter
@@ -31,9 +31,6 @@ public class Usuario {
     @Column(name = "sexo_usuario")
     private String sexo;
 
-    @Column(name = "token_usuario", nullable = false, unique = true)
-    private String token;
-
     @Column(name = "idade_usuario", nullable = true)
     private String idade;
 
@@ -50,5 +47,13 @@ public class Usuario {
 
     @OneToMany(mappedBy = "usuario")
     private List<Avaliacao> avaliacoes;
+
+    public Usuario(UsuarioDTO usuarioDTO){
+        BeanUtils.copyProperties(usuarioDTO, this);
+    }
+
+    public Usuario(){}
+
 }
+
 

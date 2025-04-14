@@ -5,7 +5,7 @@ import com.mapadavida.mdvBackend.models.entities.Local;
 import com.mapadavida.mdvBackend.models.entities.TipoAtividade;
 import com.mapadavida.mdvBackend.models.entities.Usuario;
 import com.mapadavida.mdvBackend.repositories.CheckinRepository;
-import com.mapadavida.mdvBackend.services.LocaisService;
+import com.mapadavida.mdvBackend.services.LocalService;
 import com.mapadavida.mdvBackend.services.TipoAtividadeService;
 import com.mapadavida.mdvBackend.services.UsuarioService;
 import org.springframework.web.bind.annotation.*;
@@ -22,10 +22,10 @@ public class CheckinController {
 
     private final CheckinRepository checkinRepository;
     private final UsuarioService usuarioService;
-    private final LocaisService locaisService;
+    private final LocalService locaisService;
     private final TipoAtividadeService tipoAtividadeService;
 
-    public CheckinController(CheckinRepository checkinRepository, UsuarioService usuarioService, LocaisService locaisService, TipoAtividadeService tipoAtividadeService) {
+    public CheckinController(CheckinRepository checkinRepository, UsuarioService usuarioService, LocalService locaisService, TipoAtividadeService tipoAtividadeService) {
         this.checkinRepository = checkinRepository;
         this.usuarioService = usuarioService;
         this.locaisService = locaisService;

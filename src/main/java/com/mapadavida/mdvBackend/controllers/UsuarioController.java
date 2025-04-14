@@ -1,11 +1,13 @@
 package com.mapadavida.mdvBackend.controllers;
 
+import com.mapadavida.mdvBackend.models.dto.LoginDTO;
 import com.mapadavida.mdvBackend.models.dto.UsuarioDTO;
 import com.mapadavida.mdvBackend.models.entities.Endereco;
 import com.mapadavida.mdvBackend.models.entities.Usuario;
 import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
 import com.mapadavida.mdvBackend.repositories.EnderecoRepository;
 import com.mapadavida.mdvBackend.repositories.UsuarioRepository;
+import com.mapadavida.mdvBackend.services.EnderecoService;
 import com.mapadavida.mdvBackend.services.UsuarioService;
 import jakarta.persistence.EntityNotFoundException;
 import org.hibernate.query.sqm.EntityTypeException;
@@ -18,9 +20,12 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static java.time.LocalTime.now;
 
 @CrossOrigin
 @RestController
@@ -31,7 +36,7 @@ public class UsuarioController {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
-    private EnderecoRepository enderecoRepository;
+    private EnderecoService enderecoService;
 
     @Autowired
     private UsuarioService usuarioService;
@@ -41,18 +46,15 @@ public class UsuarioController {
     private byte[] salt = "MDV".getBytes();
 
     @PostMapping(value = "/login")
-    public ResponseEntity<Usuario> login(@RequestBody Usuario usu) {
-        String passwordHash = criptografar(usu.getSenha());
-        Usuario usuario = usuarioRepository.findByEmail(usu.getEmail()).orElse(null);
-        if (usuario != null) {
-            usuario = usuarioRepository.findByEmailAndSenha(usu.getEmail(), passwordHash).orElse(null);
-            if (usuario != null) {
-                String token = UUID.randomUUID().toString();
-                usuario.setToken(token);
-                usuarioRepository.save(usuario);
-                return ResponseEntity.ok(usuario);
+    public ResponseEntity<UsuarioDTO> login(@RequestBody LoginDTO usu) {
+        if (usu.getEmail() != null && usu.getSenha() != null) {
+            String passwordHash = criptografar(usu.getSenha());
+            usu.setSenha(passwordHash);
+            UsuarioDTO usuarioDTO = usuarioService.login(usu);
+            if (usuarioDTO != null) {
+                return ResponseEntity.ok(usuarioDTO);
             } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -61,7 +63,7 @@ public class UsuarioController {
 
     private String criptografar(String texto) {
         MessageDigest digest;
-        byte[] passwordHash = null;
+        byte[] passwordHash;
         StringBuilder sb = new StringBuilder();
         try {
             digest = MessageDigest.getInstance("SHA-256");
@@ -78,16 +80,16 @@ public class UsuarioController {
 
     @PostMapping(value = "/cadastrar")
     public ResponseEntity<Usuario> cadastrar(@RequestBody Usuario usu) {
-        Optional<Usuario> usuarioExistente = usuarioRepository.findByEmail(usu.getEmail());
+        Optional<Usuario> usuarioExistente = usuarioService.findByEmail(usu.getEmail());
         if (usuarioExistente.isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
         } else {
             if (usu.getEndereco() == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
             }
-            enderecoRepository.save(usu.getEndereco());
+            enderecoService.createEndereco(usu.getEndereco());
             usu.setSenha(criptografar(usu.getSenha()));
-            Usuario usuarioSalvo = usuarioRepository.save(usu);
+            Usuario usuarioSalvo = usuarioService.createUser(usu);
             return ResponseEntity.ok(usuarioSalvo);
         }
     }
@@ -99,8 +101,8 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Usuario>> getAllUsuarios() {
-        List<Usuario> usuarios = usuarioService.getAllUsuarios();
+    public ResponseEntity<List<UsuarioDTO>> getAllUsuarios() {
+        List<UsuarioDTO> usuarios = usuarioService.getAllUsuarios();
         return ResponseEntity.ok(usuarios);
     }
 
@@ -120,8 +122,8 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> updateUsuario(@PathVariable Long id, @RequestBody Usuario usuarioDetails) {
-        Usuario updatedUsuario = usuarioService.updateUsuario(id, usuarioDetails);
+    public ResponseEntity<UsuarioDTO> updateUsuario(@PathVariable Long id, @RequestBody Usuario usuarioDetails) {
+        UsuarioDTO updatedUsuario = usuarioService.updateUsuario(id, usuarioDetails);
         if (updatedUsuario != null) {
             return ResponseEntity.ok(updatedUsuario);
         } else {
