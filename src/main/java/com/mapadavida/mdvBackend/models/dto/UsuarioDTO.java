@@ -1,5 +1,7 @@
 package com.mapadavida.mdvBackend.models.dto;
 
+import com.mapadavida.mdvBackend.models.entities.Endereco;
+import com.mapadavida.mdvBackend.models.entities.Usuario;
 import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,4 +21,5 @@ public class UsuarioDTO {
     public UsuarioDTO(Usuario usuario) {
         BeanUtils.copyProperties(usuario, this);
     }
+
 }

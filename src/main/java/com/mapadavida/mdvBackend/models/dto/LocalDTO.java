@@ -12,9 +12,16 @@ public class LocalDTO {
     private String nome;
     private boolean aprovado;
     private EnderecoDTO endereco;
+
     private Long tipoAtividadeId;
+    private String tipoAtividadeNome;
+
     private Long tipoAcessoId;
+    private String tipoAcessoNome;
+
     private Long tipoLocalId;
+    private String tipoLocalNome;
+
     private String horariosFuncionamento;
     private String informacoesAdicionais;
     private Integer distancia;
@@ -34,12 +41,15 @@ public class LocalDTO {
             }
             if (local.getTipoAtividade() != null) {
                 this.tipoAtividadeId = local.getTipoAtividade().getId();
+                this.tipoAtividadeNome = local.getTipoAtividade().getNome();
             }
             if (local.getTipoAcesso() != null) {
                 this.tipoAcessoId = local.getTipoAcesso().getId();
+                this.tipoAcessoNome = local.getTipoAcesso().getNome();
             }
             if (local.getTipoLocal() != null) {
                 this.tipoLocalId = local.getTipoLocal().getId();
+                this.tipoLocalNome = local.getTipoLocal().getNome();
             }
         }
     }

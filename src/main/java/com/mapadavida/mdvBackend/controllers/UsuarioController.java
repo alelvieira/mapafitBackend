@@ -33,6 +33,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Map;
+
 
 import static java.time.LocalTime.now;
 
@@ -40,9 +42,6 @@ import static java.time.LocalTime.now;
 @RestController
 @RequestMapping("/usuarios")
 public class UsuarioController{
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -62,21 +61,31 @@ public class UsuarioController{
 
     private byte[] salt = "MDV".getBytes();
 
-    @PostMapping(value = "/login")
-    public ResponseEntity<UsuarioDTO> login(@RequestBody LoginDTO usu) {
-        if (usu.getEmail() != null && usu.getSenha() != null) {
-            String passwordHash = criptografar(usu.getSenha());
-            usu.setSenha(passwordHash);
-            UsuarioDTO usuarioDTO = usuarioService.login(usu);
-            if (usuarioDTO != null) {
-                return ResponseEntity.ok(usuarioDTO);
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-            }
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginDTO dados) {
+        if (dados.getEmail() == null || dados.getSenha() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "dados_invalidos"));
         }
+
+        Usuario usuario = usuarioRepository.findByEmail(dados.getEmail()).orElse(null);
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "email_nao_encontrado"));
+        }
+
+        /*String senhaCriptografada = criptografar(dados.getSenha());
+        if (!usuario.getSenha().equals(senhaCriptografada))*/
+        if (!usuario.getSenha().equals(dados.getSenha()))
+        {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "senha_incorreta"));
+        }
+
+        UsuarioDTO usuarioDTO = new UsuarioDTO(usuario);
+        return ResponseEntity.ok(Map.of("token", "FAKE-JWT", "user", usuarioDTO));
     }
+
 
     private String criptografar(String texto) {
         MessageDigest digest;

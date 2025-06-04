@@ -97,5 +97,40 @@ public class LocalService {
         }).flatMap(List::stream).toList();
     }
 
+    public LocalDTO updateLocal(Long id, LocalDTO dto) {
+        Local local = localRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Local não encontrado"));
+
+        local.setNome(dto.getNome());
+        local.setAprovado(dto.isAprovado());
+        local.setHorariosFuncionamento(dto.getHorariosFuncionamento());
+        local.setInformacoesAdicionais(dto.getInformacoesAdicionais());
+
+        if (dto.getTipoAtividadeId() != null) {
+            local.setTipoAtividade(tipoAtividadeRepository.findById(dto.getTipoAtividadeId())
+                    .orElse(null));
+        }
+
+        if (dto.getTipoAcessoId() != null) {
+            local.setTipoAcesso(tipoAcessoRepository.findById(dto.getTipoAcessoId())
+                    .orElse(null));
+        }
+
+        if (dto.getTipoLocalId() != null) {
+            local.setTipoLocal(tipoLocalRepository.findById(dto.getTipoLocalId())
+                    .orElse(null));
+        }
+
+        if (dto.getEndereco() != null && dto.getEndereco().getId() != null) {
+            Endereco endereco = enderecoRepository.findById(dto.getEndereco().getId())
+                    .orElse(null);
+            local.setEndereco(endereco);
+        }
+
+        Local atualizado = localRepository.save(local);
+        return new LocalDTO(atualizado);
+    }
+
+
 
 }

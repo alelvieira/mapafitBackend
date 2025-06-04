@@ -3,8 +3,10 @@ package com.mapadavida.mdvBackend.services;
 import com.mapadavida.mdvBackend.models.dto.LoginDTO;
 import com.mapadavida.mdvBackend.models.dto.UsuarioDTO;
 import com.mapadavida.mdvBackend.models.entities.Usuario;
+import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
 import com.mapadavida.mdvBackend.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -64,6 +66,18 @@ public class UsuarioService implements UserDetailsService {
     public UsuarioDTO login(LoginDTO loginDTO){
         Optional<Usuario> user = usuarioRepository.findByEmailAndSenha(loginDTO.getEmail().toLowerCase(), loginDTO.getSenha());
         return user.map(UsuarioDTO::new).orElse(null);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + email));
+
+        return new org.springframework.security.core.userdetails.User(
+                usuario.getEmail(),
+                usuario.getSenha(),
+                List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getTipoUsuario().name()))
+        );
     }
 
 }

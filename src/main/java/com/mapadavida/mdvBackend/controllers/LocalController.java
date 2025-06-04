@@ -3,14 +3,24 @@ package com.mapadavida.mdvBackend.controllers;
 import com.mapadavida.mdvBackend.models.dto.EnderecoDTO;
 import com.mapadavida.mdvBackend.models.dto.LocalDTO;
 import com.mapadavida.mdvBackend.models.entities.Endereco;
+import com.mapadavida.mdvBackend.models.entities.TipoAcesso;
+import com.mapadavida.mdvBackend.models.entities.TipoAtividade;
+import com.mapadavida.mdvBackend.models.entities.TipoLocal;
+import com.mapadavida.mdvBackend.repositories.TipoAcessoRepository;
+import com.mapadavida.mdvBackend.repositories.TipoAtividadeRepository;
+import com.mapadavida.mdvBackend.repositories.TipoLocalRepository;
 import com.mapadavida.mdvBackend.services.EnderecoService;
 import com.mapadavida.mdvBackend.services.LocalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin
 @RestController
@@ -19,6 +29,15 @@ public class LocalController {
 
     private final LocalService localService;
     private final EnderecoService enderecoService;
+
+    @Autowired
+    private TipoLocalRepository tipoLocalRepository;
+
+    @Autowired
+    private TipoAtividadeRepository tipoAtividadeRepository;
+
+    @Autowired
+    private TipoAcessoRepository tipoAcessoRepository;
 
     @Autowired
     public LocalController(LocalService localService, EnderecoService enderecoService) {
@@ -31,6 +50,7 @@ public class LocalController {
         List<LocalDTO> locais = localService.getLocais();
         return ResponseEntity.ok(locais);
     }
+
 
     @GetMapping("/tipo_local/{id}")
     public ResponseEntity<List<LocalDTO>> getLocaisByTipo(@PathVariable Long id) {
@@ -48,6 +68,21 @@ public class LocalController {
     public ResponseEntity<List<LocalDTO>> getLocaisByTipoAcesso(@PathVariable Long id) {
         List<LocalDTO> locais = localService.findLocaisByTipoAcesso(id);
         return ResponseEntity.ok(locais);
+    }
+
+    @GetMapping("/tipo_local")
+    public ResponseEntity<List<TipoLocal>> listarTiposLocais() {
+        return ResponseEntity.ok(tipoLocalRepository.findAll());
+    }
+
+    @GetMapping("/tipo_atividade")
+    public ResponseEntity<List<TipoAtividade>> listarTiposAtividades() {
+        return ResponseEntity.ok(tipoAtividadeRepository.findAll());
+    }
+
+    @GetMapping("/tipo_acesso")
+    public ResponseEntity<List<TipoAcesso>> listarTiposAcesso() {
+        return ResponseEntity.ok(tipoAcessoRepository.findAll());
     }
 
     @GetMapping("/proximos")
@@ -84,4 +119,39 @@ public class LocalController {
         LocalDTO localCriado = localService.createLocal(localDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(localCriado);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<LocalDTO> updateLocal(@PathVariable Long id, @RequestBody LocalDTO dto) {
+        LocalDTO updated = localService.updateLocal(id, dto);
+        return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/geocode")
+    public ResponseEntity<?> geocode(@RequestParam String endereco) {
+        String apiKey = "AIzaSyCtblRaM76V0Qdyea2f34MPYFmQNbzb9Eo";
+        String url = "https://maps.googleapis.com/maps/api/geocode/json?address="
+                + URLEncoder.encode(endereco, StandardCharsets.UTF_8)
+                + "&key=" + apiKey;
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            List results = (List) response.getBody().get("results");
+            if (!results.isEmpty()) {
+                Map geometry = (Map) ((Map) results.get(0)).get("geometry");
+                Map location = (Map) geometry.get("location");
+
+                double lat = (double) location.get("lat");
+                double lng = (double) location.get("lng");
+
+                return ResponseEntity.ok(Map.of("latitude", lat, "longitude", lng));
+            }
+        }
+
+        return ResponseEntity.status(404).body(Map.of("error", "Endereço não encontrado"));
+    }
+
+
+
 }

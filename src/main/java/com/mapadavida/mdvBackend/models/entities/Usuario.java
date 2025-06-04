@@ -36,7 +36,7 @@ public class Usuario {
 
     @ManyToOne
     @JoinColumn(name = "id_endereco", referencedColumnName = "id_endereco", nullable = false)
-    private Endereco endereco;
+    private com.mapadavida.mdvBackend.models.entities.Endereco endereco;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_usuario", nullable = false)
@@ -46,7 +46,7 @@ public class Usuario {
     private String senha;
 
     @OneToMany(mappedBy = "usuario")
-    private List<Avaliacao> avaliacoes;
+    private List<com.mapadavida.mdvBackend.models.entities.Avaliacao> avaliacoes;
 
     public Usuario(UsuarioDTO usuarioDTO){
         BeanUtils.copyProperties(usuarioDTO, this);
