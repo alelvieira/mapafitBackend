@@ -30,14 +30,9 @@ public class LocalController {
     private final LocalService localService;
     private final EnderecoService enderecoService;
 
-    @Autowired
-    private TipoLocalRepository tipoLocalRepository;
-
-    @Autowired
-    private TipoAtividadeRepository tipoAtividadeRepository;
-
-    @Autowired
-    private TipoAcessoRepository tipoAcessoRepository;
+    @Autowired private TipoLocalRepository tipoLocalRepository;
+    @Autowired private TipoAtividadeRepository tipoAtividadeRepository;
+    @Autowired private TipoAcessoRepository tipoAcessoRepository;
 
     @Autowired
     public LocalController(LocalService localService, EnderecoService enderecoService) {
@@ -47,27 +42,22 @@ public class LocalController {
 
     @GetMapping
     public ResponseEntity<List<LocalDTO>> getAllLocais() {
-        List<LocalDTO> locais = localService.getLocais();
-        return ResponseEntity.ok(locais);
+        return ResponseEntity.ok(localService.getLocais());
     }
-
 
     @GetMapping("/tipo_local/{id}")
     public ResponseEntity<List<LocalDTO>> getLocaisByTipo(@PathVariable Long id) {
-        List<LocalDTO> locais = localService.findLocaisByTipoLocal(id);
-        return ResponseEntity.ok(locais);
+        return ResponseEntity.ok(localService.findLocaisByTipoLocal(id));
     }
 
     @GetMapping("/tipo_atividade/{id}")
     public ResponseEntity<List<LocalDTO>> getLocaisByTipoAtividade(@PathVariable Long id) {
-        List<LocalDTO> locais = localService.findLocaisByTipoAtividade(id);
-        return ResponseEntity.ok(locais);
+        return ResponseEntity.ok(localService.findLocaisByTipoAtividade(id));
     }
 
     @GetMapping("/tipo_acesso/{id}")
     public ResponseEntity<List<LocalDTO>> getLocaisByTipoAcesso(@PathVariable Long id) {
-        List<LocalDTO> locais = localService.findLocaisByTipoAcesso(id);
-        return ResponseEntity.ok(locais);
+        return ResponseEntity.ok(localService.findLocaisByTipoAcesso(id));
     }
 
     @GetMapping("/tipo_local")
@@ -87,10 +77,9 @@ public class LocalController {
 
     @GetMapping("/proximos")
     public ResponseEntity<List<LocalDTO>> buscarProximos(@RequestParam double latitude,
-                                                            @RequestParam double longitude,
-                                                            @RequestParam double raio) {
-        List<LocalDTO> locais = localService.findLocaisProximos(latitude, longitude, raio);
-        return ResponseEntity.ok(locais);
+                                                         @RequestParam double longitude,
+                                                         @RequestParam double raio) {
+        return ResponseEntity.ok(localService.findLocaisProximos(latitude, longitude, raio));
     }
 
     @PostMapping("/novo")
@@ -99,12 +88,17 @@ public class LocalController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
-        Endereco endereco = enderecoService.salvarEndereco(enderecoDTO, enderecoDTO.getLatitude().doubleValue(), enderecoDTO.getLongitude().doubleValue());
+        Endereco endereco = enderecoService.salvarEndereco(enderecoDTO,
+                enderecoDTO.getLatitude().doubleValue(),
+                enderecoDTO.getLongitude().doubleValue());
+
         return ResponseEntity.status(HttpStatus.CREATED).body(new EnderecoDTO(endereco));
     }
 
     @PostMapping
     public ResponseEntity<LocalDTO> createLocal(@RequestBody LocalDTO localDTO) {
+        System.out.println(">>> Recebido novo local: " + localDTO.getNome());
+
         if (localDTO.getEndereco() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -122,8 +116,7 @@ public class LocalController {
 
     @PutMapping("/{id}")
     public ResponseEntity<LocalDTO> updateLocal(@PathVariable Long id, @RequestBody LocalDTO dto) {
-        LocalDTO updated = localService.updateLocal(id, dto);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(localService.updateLocal(id, dto));
     }
 
     @GetMapping("/geocode")
@@ -151,7 +144,4 @@ public class LocalController {
 
         return ResponseEntity.status(404).body(Map.of("error", "Endereço não encontrado"));
     }
-
-
-
 }

@@ -20,6 +20,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/usuarios/login", "/local/geocode", "/local/geocode/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/local/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/local", "/local/").permitAll()
                         .anyRequest().authenticated()
                 )
                 .build();
