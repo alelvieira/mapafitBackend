@@ -23,7 +23,7 @@ public class Local {
     @Column(name = "aprovado", nullable = false)
     private boolean aprovado = false;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "endereco_id")
     private Endereco endereco;
 

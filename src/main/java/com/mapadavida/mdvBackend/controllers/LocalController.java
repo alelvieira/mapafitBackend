@@ -127,7 +127,7 @@ public class LocalController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLocal(@PathVariable Long id) {
-        localService.deletar(id); // ou como se chama seu método no service
+        localService.deletar(id);
         return ResponseEntity.noContent().build();
     }
 
