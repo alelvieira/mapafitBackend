@@ -61,27 +61,34 @@ public class LocalService {
     }
 
     public LocalDTO createLocal(LocalDTO localDTO) {
-        if (localDTO.getTipoLocalId() != null) {
-            TipoLocal tipoLocal = tipoLocalRepository.findById(localDTO.getTipoLocalId())
-                    .orElseThrow(() -> new RuntimeException("TipoLocal não encontrado"));
-            if (localDTO.getTipoAtividadeId() != null) {
-                TipoAtividade tipoAtividade = tipoAtividadeRepository.findById(localDTO.getTipoAtividadeId())
-                        .orElseThrow(() -> new RuntimeException("TipoAtividade não encontrado"));
-                if (localDTO.getTipoAcessoId() != null) {
-                    TipoAcesso tipoAcesso = tipoAcessoRepository.findById(localDTO.getTipoAcessoId())
-                            .orElseThrow(() -> new RuntimeException("TipoAcesso não encontrado"));
+        // Validar e obter entidades relacionadas
+        TipoLocal tipoLocal = tipoLocalRepository.findById(localDTO.getTipoLocalId())
+                .orElseThrow(() -> new RuntimeException("TipoLocal não encontrado"));
 
-                    Endereco endereco = enderecoService.salvarEndereco(localDTO.getEndereco(), localDTO.getEndereco().getLatitude().doubleValue(), localDTO.getEndereco().getLongitude().doubleValue());
-                    Local local = new Local(localDTO, endereco,  tipoAtividade, tipoAcesso, tipoLocal);
+        TipoAtividade tipoAtividade = tipoAtividadeRepository.findById(localDTO.getTipoAtividadeId())
+                .orElseThrow(() -> new RuntimeException("TipoAtividade não encontrado"));
 
-                    localRepository.save(local);
+        TipoAcesso tipoAcesso = tipoAcessoRepository.findById(localDTO.getTipoAcessoId())
+                .orElseThrow(() -> new RuntimeException("TipoAcesso não encontrado"));
 
-                    return new LocalDTO(local);
-                }
-            }
-        }
-        return localDTO;
+        // Criar e salvar endereço (como entidade nova)
+        Endereco endereco = new Endereco(localDTO.getEndereco());
+        endereco.setId(null); // Garante que o JPA trate como novo
+        endereco.setLatitudeLongitude(
+                localDTO.getEndereco().getLatitude().doubleValue(),
+                localDTO.getEndereco().getLongitude().doubleValue()
+        );
+        endereco = enderecoRepository.save(endereco);
+
+        // Criar Local
+        Local local = new Local(localDTO, endereco, tipoAtividade, tipoAcesso, tipoLocal);
+
+        // Persistir Local com endereço já salvo
+        localRepository.save(local);
+
+        return new LocalDTO(local);
     }
+
 
     public List<LocalDTO> findLocaisProximos(double latitude, double longitude, double raio) {
 

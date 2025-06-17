@@ -8,7 +8,7 @@ VALUES
 INSERT INTO public.tb_usuario (nome_usuario, idade_usuario, sexo_usuario, tipo_usuario, senha_usuario, email_usuario, id_endereco)
 VALUES
     ('Maria', 80, 'Feminino', 'CADASTRADO', 'd9015ac639774caa148c8860f06f0d0092a0dfb3a851a8e04bc5887e79c2ae2b',  'maria@email.com', 1),
-    ('Admin', 75, 'Masculino', 'ADMIN', '12345678', 'admin@email.com', 2);
+    ('Admin', 75, 'Masculino', 'ADMINISTRADOR', '12345678', 'admin@email.com', 2);
 
 
 INSERT INTO public.tb_tipo_atividade (nome)
