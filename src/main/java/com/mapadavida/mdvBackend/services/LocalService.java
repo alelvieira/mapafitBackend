@@ -4,6 +4,7 @@ import com.mapadavida.mdvBackend.models.dto.EnderecoDTO;
 import com.mapadavida.mdvBackend.models.dto.LocalDTO;
 import com.mapadavida.mdvBackend.models.entities.*;
 import com.mapadavida.mdvBackend.repositories.*;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -132,5 +133,15 @@ public class LocalService {
     }
 
 
+    public List<Local> listarAprovados() {
+        return localRepository.findByAprovadoTrue();
+    }
+
+    public void deletar(Long id) {
+        if (!localRepository.existsById(id)) {
+            throw new EntityNotFoundException("Local não encontrado");
+        }
+        localRepository.deleteById(id);
+    }
 
 }

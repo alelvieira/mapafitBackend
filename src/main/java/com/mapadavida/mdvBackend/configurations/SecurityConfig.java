@@ -18,9 +18,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults()) // ✅ CORS habilitado
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/usuarios/login", "/local/geocode", "/local/geocode/**").permitAll()
+                        .requestMatchers("/login", "/usuarios/login", "/local/geocode", "/local/geocode/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/local/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/local", "/local/").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/local/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/local/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .build();

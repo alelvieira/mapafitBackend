@@ -2,10 +2,7 @@ package com.mapadavida.mdvBackend.controllers;
 
 import com.mapadavida.mdvBackend.models.dto.EnderecoDTO;
 import com.mapadavida.mdvBackend.models.dto.LocalDTO;
-import com.mapadavida.mdvBackend.models.entities.Endereco;
-import com.mapadavida.mdvBackend.models.entities.TipoAcesso;
-import com.mapadavida.mdvBackend.models.entities.TipoAtividade;
-import com.mapadavida.mdvBackend.models.entities.TipoLocal;
+import com.mapadavida.mdvBackend.models.entities.*;
 import com.mapadavida.mdvBackend.repositories.TipoAcessoRepository;
 import com.mapadavida.mdvBackend.repositories.TipoAtividadeRepository;
 import com.mapadavida.mdvBackend.repositories.TipoLocalRepository;
@@ -44,6 +41,12 @@ public class LocalController {
     public ResponseEntity<List<LocalDTO>> getAllLocais() {
         return ResponseEntity.ok(localService.getLocais());
     }
+
+    @GetMapping("/aprovados")
+    public List<Local> getAprovados() {
+        return localService.listarAprovados();
+    }
+
 
     @GetMapping("/tipo_local/{id}")
     public ResponseEntity<List<LocalDTO>> getLocaisByTipo(@PathVariable Long id) {
@@ -144,4 +147,11 @@ public class LocalController {
 
         return ResponseEntity.status(404).body(Map.of("error", "Endereço não encontrado"));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLocal(@PathVariable Long id) {
+        localService.deletar(id); // ou como se chama seu método no service
+        return ResponseEntity.noContent().build();
+    }
+
 }
