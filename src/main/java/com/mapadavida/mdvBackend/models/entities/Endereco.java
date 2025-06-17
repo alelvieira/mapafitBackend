@@ -8,8 +8,12 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -47,7 +51,23 @@ public class Endereco {
     @Column(columnDefinition = "geometry(Point,4326)")
     private Point localizacao;
 
-    public Endereco(EnderecoDTO enderecoDTO, Point localizacao) {
+    public Double getLatitude() {
+        return localizacao != null ? localizacao.getY() : null;
+    }
+
+    public Double getLongitude() {
+        return localizacao != null ? localizacao.getX() : null;
+    }
+
+
+    public void setLatitudeLongitude(Double lat, Double lng) {
+        if (lat != null && lng != null) {
+            GeometryFactory gf = new GeometryFactory(new PrecisionModel(), 4326);
+            this.localizacao = gf.createPoint(new Coordinate(lng, lat));
+        }
+    }
+
+    public Endereco(EnderecoDTO enderecoDTO) {
         if (enderecoDTO != null) {
             this.id = enderecoDTO.getId();
             this.rua = enderecoDTO.getRua();
@@ -55,7 +75,19 @@ public class Endereco {
             this.estado = enderecoDTO.getEstado();
             this.numero = enderecoDTO.getNumero();
             this.cep = enderecoDTO.getCep();
-            this.localizacao = localizacao;
+
+            if (enderecoDTO.getLatitude() != null && enderecoDTO.getLongitude() != null) {
+                this.setLatitudeLongitude(
+                        enderecoDTO.getLatitude().doubleValue(),
+                        enderecoDTO.getLongitude().doubleValue()
+                );
+            }
         }
     }
+
+    public Endereco(EnderecoDTO enderecoDTO, Point localizacao) {
+        this(enderecoDTO);
+        this.localizacao = localizacao;
+    }
+
 }

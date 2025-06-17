@@ -3,11 +3,13 @@ package com.mapadavida.mdvBackend.controllers;
 import com.mapadavida.mdvBackend.models.dto.EnderecoDTO;
 import com.mapadavida.mdvBackend.models.dto.LocalDTO;
 import com.mapadavida.mdvBackend.models.entities.*;
+import com.mapadavida.mdvBackend.repositories.LocalRepository;
 import com.mapadavida.mdvBackend.repositories.TipoAcessoRepository;
 import com.mapadavida.mdvBackend.repositories.TipoAtividadeRepository;
 import com.mapadavida.mdvBackend.repositories.TipoLocalRepository;
 import com.mapadavida.mdvBackend.services.EnderecoService;
 import com.mapadavida.mdvBackend.services.LocalService;
+import com.mapadavida.mdvBackend.services.TipoAcessoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,15 +28,17 @@ public class LocalController {
 
     private final LocalService localService;
     private final EnderecoService enderecoService;
+    private final LocalRepository localRepository;
 
     @Autowired private TipoLocalRepository tipoLocalRepository;
     @Autowired private TipoAtividadeRepository tipoAtividadeRepository;
     @Autowired private TipoAcessoRepository tipoAcessoRepository;
 
     @Autowired
-    public LocalController(LocalService localService, EnderecoService enderecoService) {
+    public LocalController(LocalService localService, EnderecoService enderecoService, LocalRepository localRepository) {
         this.localService = localService;
         this.enderecoService = enderecoService;
+        this.localRepository = localRepository;
     }
 
     @GetMapping
@@ -46,7 +50,6 @@ public class LocalController {
     public List<Local> getAprovados() {
         return localService.listarAprovados();
     }
-
 
     @GetMapping("/tipo_local/{id}")
     public ResponseEntity<List<LocalDTO>> getLocaisByTipo(@PathVariable Long id) {
@@ -122,6 +125,12 @@ public class LocalController {
         return ResponseEntity.ok(localService.updateLocal(id, dto));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLocal(@PathVariable Long id) {
+        localService.deletar(id); // ou como se chama seu método no service
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/geocode")
     public ResponseEntity<?> geocode(@RequestParam String endereco) {
         String apiKey = "AIzaSyCtblRaM76V0Qdyea2f34MPYFmQNbzb9Eo";
@@ -146,12 +155,6 @@ public class LocalController {
         }
 
         return ResponseEntity.status(404).body(Map.of("error", "Endereço não encontrado"));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLocal(@PathVariable Long id) {
-        localService.deletar(id); // ou como se chama seu método no service
-        return ResponseEntity.noContent().build();
     }
 
 }

@@ -99,39 +99,35 @@ public class LocalService {
     }
 
     public LocalDTO updateLocal(Long id, LocalDTO dto) {
-        Local local = localRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Local não encontrado"));
+        return localRepository.findById(id).map(local -> {
+            local.setNome(dto.getNome());
+            local.setAprovado(dto.isAprovado());
+            local.setTipoLocal(tipoLocalRepository.findById(dto.getTipoLocalId()).orElse(null));
+            local.setTipoAtividade(tipoAtividadeRepository.findById(dto.getTipoAtividadeId()).orElse(null));
+            local.setTipoAcesso(tipoAcessoRepository.findById(dto.getTipoAcessoId()).orElse(null));
+            local.setHorariosFuncionamento(dto.getHorariosFuncionamento());
+            local.setInformacoesAdicionais(dto.getInformacoesAdicionais());
 
-        local.setNome(dto.getNome());
-        local.setAprovado(dto.isAprovado());
-        local.setHorariosFuncionamento(dto.getHorariosFuncionamento());
-        local.setInformacoesAdicionais(dto.getInformacoesAdicionais());
+            Endereco endereco = local.getEndereco();
+            if (endereco != null) {
+                endereco.setRua(dto.getEndereco().getRua());
+                endereco.setNumero(dto.getEndereco().getNumero());
+                endereco.setCidade(dto.getEndereco().getCidade());
+                endereco.setEstado(dto.getEndereco().getEstado());
+                endereco.setCep(dto.getEndereco().getCep());
 
-        if (dto.getTipoAtividadeId() != null) {
-            local.setTipoAtividade(tipoAtividadeRepository.findById(dto.getTipoAtividadeId())
-                    .orElse(null));
-        }
+                if (dto.getEndereco().getLatitude() != null && dto.getEndereco().getLongitude() != null) {
+                    endereco.setLatitudeLongitude(
+                            dto.getEndereco().getLatitude().doubleValue(),
+                            dto.getEndereco().getLongitude().doubleValue()
+                    );
+                }
+            }
 
-        if (dto.getTipoAcessoId() != null) {
-            local.setTipoAcesso(tipoAcessoRepository.findById(dto.getTipoAcessoId())
-                    .orElse(null));
-        }
-
-        if (dto.getTipoLocalId() != null) {
-            local.setTipoLocal(tipoLocalRepository.findById(dto.getTipoLocalId())
-                    .orElse(null));
-        }
-
-        if (dto.getEndereco() != null && dto.getEndereco().getId() != null) {
-            Endereco endereco = enderecoRepository.findById(dto.getEndereco().getId())
-                    .orElse(null);
-            local.setEndereco(endereco);
-        }
-
-        Local atualizado = localRepository.save(local);
-        return new LocalDTO(atualizado);
+            localRepository.save(local);
+            return new LocalDTO(local);
+        }).orElseThrow(() -> new RuntimeException("Local não encontrado"));
     }
-
 
     public List<Local> listarAprovados() {
         return localRepository.findByAprovadoTrue();
