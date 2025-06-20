@@ -41,9 +41,12 @@ public class UsuarioService implements UserDetailsService {
             usuario.setEmail(usuarioUpdated.getEmail());
             usuario.setSexo(usuarioUpdated.getSexo());
             usuario.setIdade(usuarioUpdated.getIdade());
+            usuario.setTelefone(usuarioUpdated.getTelefone());
             usuario.setEndereco(usuarioUpdated.getEndereco());
             usuario.setTipoUsuario(usuarioUpdated.getTipoUsuario());
-            usuario.setSenha(usuarioUpdated.getSenha());
+            if (usuarioUpdated.getSenha() != null && !usuarioUpdated.getSenha().isBlank()) {
+                usuario.setSenha(usuarioUpdated.getSenha());
+            }
             usuarioRepository.save(usuario);
             return new UsuarioDTO(usuario);
         } else {

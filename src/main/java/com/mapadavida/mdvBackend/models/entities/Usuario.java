@@ -28,6 +28,9 @@ public class Usuario {
     @Column(name = "email_usuario", nullable = true, unique = true)
     private String email;
 
+    @Column(name = "telefone_usuario")
+    private String telefone;
+
     @Column(name = "sexo_usuario")
     private String sexo;
 

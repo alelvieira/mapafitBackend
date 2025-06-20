@@ -80,4 +80,17 @@ public class EnderecoService {
         Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude)); // Ordem correta: longitude, latitude
         Point point2 = geometryFactory.createPoint(new Coordinate(enderecoDTO.getLatitude().doubleValue(), enderecoDTO.getLongitude().doubleValue())); // Ordem correta: longitude, latitude
         return (int) point.distance(point2);}
+
+    public Endereco findOrSave(Endereco endereco) {
+        return enderecoRepository
+                .findByRuaAndNumeroAndCidadeAndEstadoAndCep(
+                        endereco.getRua(),
+                        endereco.getNumero(),
+                        endereco.getCidade(),
+                        endereco.getEstado(),
+                        endereco.getCep()
+                )
+                .orElseGet(() -> enderecoRepository.save(endereco));
+    }
+
 }

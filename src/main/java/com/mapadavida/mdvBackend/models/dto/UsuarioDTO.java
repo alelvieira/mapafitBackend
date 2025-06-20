@@ -15,6 +15,7 @@ public class UsuarioDTO {
     private String email;
     private String sexo;
     private String idade;
+    private String telefone;
     private Endereco endereco;
     private TipoUsuario tipoUsuario;
 

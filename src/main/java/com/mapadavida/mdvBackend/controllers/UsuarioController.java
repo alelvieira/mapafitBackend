@@ -2,6 +2,7 @@ package com.mapadavida.mdvBackend.controllers;
 
 import com.mapadavida.mdvBackend.models.dto.LoginDTO;
 import com.mapadavida.mdvBackend.models.dto.UsuarioDTO;
+import com.mapadavida.mdvBackend.models.entities.Endereco;
 import com.mapadavida.mdvBackend.models.entities.Usuario;
 import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
 import com.mapadavida.mdvBackend.repositories.EnderecoRepository;
@@ -113,7 +114,9 @@ public class UsuarioController{
             if (usu.getEndereco() == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
             }
-            enderecoService.createEndereco(usu.getEndereco());
+            Endereco enderecoNormalizado = enderecoService.findOrSave(usu.getEndereco());
+            usu.setEndereco(enderecoNormalizado);
+
             usu.setSenha(criptografar(usu.getSenha()));
             Usuario usuarioSalvo = usuarioService.createUser(usu);
             return ResponseEntity.ok(usuarioSalvo);

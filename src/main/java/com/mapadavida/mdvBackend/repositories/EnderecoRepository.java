@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface EnderecoRepository extends JpaRepository<Endereco,Long> {
 
@@ -20,4 +21,9 @@ public interface EnderecoRepository extends JpaRepository<Endereco,Long> {
                               @Param("raio") double raio);
 
     Endereco findEnderecoByCepAndNumero(String cep, Integer numero);
+
+    Optional<Endereco> findByRuaAndNumeroAndCidadeAndEstadoAndCep(
+            String rua, Integer numero, String cidade, String estado, String cep
+    );
+
 }
