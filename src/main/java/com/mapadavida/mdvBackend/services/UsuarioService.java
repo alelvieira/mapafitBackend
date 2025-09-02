@@ -16,7 +16,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class UsuarioService implements UserDetailsService {
+public class
+
+UsuarioService implements UserDetailsService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -64,6 +66,14 @@ public class UsuarioService implements UserDetailsService {
 
     public Optional<Usuario> findByEmail(String email) {
         return usuarioRepository.findByEmail(email);
+    }
+
+
+    public List<UsuarioDTO> buscarUsuariosPorNome(String nome) {
+        return usuarioRepository.findByNomeContainingIgnoreCase(nome)
+                .stream()
+                .map(UsuarioDTO::new)
+                .toList();
     }
 
     public UsuarioDTO login(LoginDTO loginDTO){

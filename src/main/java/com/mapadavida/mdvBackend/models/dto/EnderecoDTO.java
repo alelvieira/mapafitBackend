@@ -18,8 +18,6 @@ public class EnderecoDTO {
     private BigDecimal latitude;
     private BigDecimal longitude;
 
-    public EnderecoDTO() {}
-
     public EnderecoDTO(Endereco endereco) {
         if (endereco != null) {
             this.id = endereco.getId();
