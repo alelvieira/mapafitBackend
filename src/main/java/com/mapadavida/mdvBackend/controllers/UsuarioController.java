@@ -62,8 +62,12 @@ public class UsuarioController{
 
     private byte[] salt = "MDV".getBytes();
 
+    private static final java.security.Key SECRET_KEY = io.jsonwebtoken.security.Keys.hmacShaKeyFor(
+            "sua-chave-secreta-super-segura-para-jwt1234567890".getBytes()
+    );
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDTO dados) {
+    public ResponseEntity<?> login(@RequestBody LoginDTO dados, jakarta.servlet.http.HttpServletResponse response) {
         if (dados.getEmail() == null || dados.getSenha() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "dados_invalidos"));
@@ -75,16 +79,39 @@ public class UsuarioController{
                     .body(Map.of("error", "email_nao_encontrado"));
         }
 
-        /*String senhaCriptografada = criptografar(dados.getSenha());
-        if (!usuario.getSenha().equals(senhaCriptografada))*/
         if (!usuario.getSenha().equals(dados.getSenha()))
         {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "senha_incorreta"));
         }
 
+        // Registra o usuário autenticado no contexto do Spring Security
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+            usuario, null, java.util.List.of()
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        String token = gerarTokenJwt(usuario);
+
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("jwt", token);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true); // true em produção (HTTPS)
+        cookie.setPath("/");
+        cookie.setMaxAge(24 * 60 * 60); // 1 dia
+        response.addCookie(cookie);
+
         UsuarioDTO usuarioDTO = new UsuarioDTO(usuario);
-        return ResponseEntity.ok(Map.of("token", "FAKE-JWT", "user", usuarioDTO));
+        return ResponseEntity.ok(Map.of("user", usuarioDTO));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioDTO> getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null || "anonymousUser".equals(auth.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Usuario usuario = (Usuario) auth.getPrincipal();
+        return ResponseEntity.ok(new UsuarioDTO(usuario));
     }
 
 
@@ -103,6 +130,17 @@ public class UsuarioController{
             e.printStackTrace();
         }
         return sb.toString();
+    }
+
+    private String gerarTokenJwt(Usuario usuario) {
+        return io.jsonwebtoken.Jwts.builder()
+                .setSubject(usuario.getEmail())
+                .claim("id", usuario.getId())
+                .claim("nome", usuario.getNome())
+                .setIssuedAt(new java.util.Date())
+                .setExpiration(new java.util.Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000)) // 1 dia
+                .signWith(SECRET_KEY, io.jsonwebtoken.SignatureAlgorithm.HS256)
+                .compact();
     }
 
     @PostMapping(value = "/cadastrar")

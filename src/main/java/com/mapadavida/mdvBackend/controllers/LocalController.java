@@ -10,6 +10,8 @@ import com.mapadavida.mdvBackend.repositories.TipoLocalRepository;
 import com.mapadavida.mdvBackend.services.EnderecoService;
 import com.mapadavida.mdvBackend.services.LocalService;
 import com.mapadavida.mdvBackend.services.TipoAcessoService;
+import com.mapadavida.mdvBackend.services.TipoAtividadeService;
+import com.mapadavida.mdvBackend.services.TipoLocalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +35,10 @@ public class LocalController {
     @Autowired private TipoLocalRepository tipoLocalRepository;
     @Autowired private TipoAtividadeRepository tipoAtividadeRepository;
     @Autowired private TipoAcessoRepository tipoAcessoRepository;
+
+    @Autowired private TipoLocalService tipoLocalService;
+    @Autowired private TipoAtividadeService tipoAtividadeService;
+    @Autowired private TipoAcessoService tipoAcessoService;
 
     @Autowired
     public LocalController(LocalService localService, EnderecoService enderecoService, LocalRepository localRepository) {
@@ -155,6 +161,34 @@ public class LocalController {
         }
 
         return ResponseEntity.status(404).body(Map.of("error", "Endereço não encontrado"));
+    }
+
+    @DeleteMapping("/tipo-local/{id}")
+    public ResponseEntity<Void> deleteTipoLocal(@PathVariable Long id) {
+        if (!tipoLocalRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        tipoLocalService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/tipo-atividade/{id}")
+    public ResponseEntity<Void> deleteTipoAtividade(@PathVariable Long id) {
+        if (!tipoAtividadeRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        tipoAtividadeService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/tipo-acesso/{id}")
+    public ResponseEntity<Void> deleteTipoAcesso(@PathVariable Long id) {
+        var tipoAcesso = tipoAcessoRepository.findById(id);
+        if (tipoAcesso.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        tipoAcessoService.delete(tipoAcesso.get());
+        return ResponseEntity.noContent().build();
     }
 
 }
