@@ -25,4 +25,20 @@ public class TipoAtividadeService {
         tipoAtividadeRepository.deleteById(id);
     }
 
+    public TipoAtividade save(TipoAtividade tipoAtividade) {
+        return tipoAtividadeRepository.save(tipoAtividade);
+    }
+
+    public TipoAtividade update(Long id, TipoAtividade dto) {
+        return tipoAtividadeRepository.findById(id)
+                .map(existing -> {
+                    existing.setNome(dto.getNome());
+                    return tipoAtividadeRepository.save(existing);
+                })
+                .orElseGet(() -> {
+                    dto.setId(id);
+                    return tipoAtividadeRepository.save(dto);
+                });
+    }
+
 }

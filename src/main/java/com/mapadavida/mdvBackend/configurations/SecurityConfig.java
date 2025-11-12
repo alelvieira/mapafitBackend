@@ -21,7 +21,7 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/usuarios", "/usuarios/login", "/local/geocode", "/local/geocode/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Permite OPTIONS para todos
                         .requestMatchers(HttpMethod.GET, "/local/**", "/usuarios/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/local", "/local/", "/usuarios/**", "/usuarios").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/local", "/local/**", "/usuarios/**", "/usuarios").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/local/**", "/usuarios/**").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/local/**", "/usuarios/**", "/usuarios").permitAll()
                         .anyRequest().authenticated()
