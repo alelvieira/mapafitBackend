@@ -4,15 +4,19 @@ import com.mapadavida.mdvBackend.models.dto.LoginDTO;
 import com.mapadavida.mdvBackend.models.dto.UsuarioDTO;
 import com.mapadavida.mdvBackend.models.entities.Endereco;
 import com.mapadavida.mdvBackend.models.entities.Usuario;
+import com.mapadavida.mdvBackend.models.entities.PasswordResetToken;
 import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
 import com.mapadavida.mdvBackend.repositories.EnderecoRepository;
 import com.mapadavida.mdvBackend.repositories.UsuarioRepository;
 import com.mapadavida.mdvBackend.services.EnderecoService;
 import com.mapadavida.mdvBackend.services.UsuarioService;
+import com.mapadavida.mdvBackend.services.PasswordResetService;
+import com.mapadavida.mdvBackend.services.EmailService;
 import jakarta.persistence.EntityNotFoundException;
 import org.hibernate.query.sqm.EntityTypeException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -58,6 +62,13 @@ public class UsuarioController{
 
     @Autowired
     private EnderecoRepository enderecoRepository;
+
+    @Autowired
+    private PasswordResetService passwordResetService;
+
+    @Autowired
+    private EmailService emailService;
+
     private ModelMapper modelMapper = new ModelMapper();
 
     private byte[] salt = "MDV".getBytes();
@@ -65,6 +76,9 @@ public class UsuarioController{
     private static final java.security.Key SECRET_KEY = io.jsonwebtoken.security.Keys.hmacShaKeyFor(
             "sua-chave-secreta-super-segura-para-jwt1234567890".getBytes()
     );
+
+    @Value("${app.frontend.url:http://localhost:3000}")
+    private String appFrontendUrl;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO dados, jakarta.servlet.http.HttpServletResponse response) {
@@ -208,5 +222,90 @@ public class UsuarioController{
     public ResponseEntity<List<UsuarioDTO>> buscarUsuariosPorNome(@RequestParam String nome) {
         List<UsuarioDTO> usuarios = usuarioService.buscarUsuariosPorNome(nome);
         return ResponseEntity.ok(usuarios);
+    }
+
+    // POST /usuarios/forgot-password
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+        String email = body != null ? body.get("email") : null;
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "email_obrigatorio"));
+        }
+
+        // responde sempre com mensagem genérica
+        ResponseEntity<?> generic = ResponseEntity.ok(Map.of("message", "Se o e-mail estiver cadastrado, você receberá instruções para redefinir a senha."));
+
+        try {
+            Optional<Usuario> userOpt = usuarioService.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                return generic;
+            }
+            Usuario user = userOpt.get();
+            // gerar token e salvar hash
+            PasswordResetService.TokenPair pair = passwordResetService.generateTokenForUser(user);
+            String tokenPlain = pair.token;
+            // montar link
+            String resetUrl = appFrontendUrl + "/reset-password?token=" + java.net.URLEncoder.encode(tokenPlain, java.nio.charset.StandardCharsets.UTF_8);
+            // enviar e-mail (não bloquear resposta)
+            emailService.sendResetPasswordEmail(user.getEmail(), user.getNome(), resetUrl);
+        } catch (Exception ex) {
+            // log e siga em frente
+            System.err.println("Erro em forgotPassword: " + ex.getMessage());
+        }
+
+        return generic;
+    }
+
+    // GET /usuarios/validate-reset-token?token=...
+    @GetMapping("/validate-reset-token")
+    public ResponseEntity<?> validateResetToken(@RequestParam String token) {
+        if (token == null || token.isBlank()) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "token_obrigatorio"));
+        String hash = passwordResetService.hashToken(token);
+        Optional<PasswordResetToken> rec = passwordResetService.findByTokenHash(hash);
+        if (rec.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "token_invalido"));
+        PasswordResetToken prt = rec.get();
+        if (prt.isUsed() || prt.getExpiresAt().isBefore(java.time.Instant.now())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "token_expirado_ou_usado"));
+        }
+        return ResponseEntity.ok(Map.of("message", "token_valido"));
+    }
+
+    // POST /usuarios/reset-password
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+        String token = body != null ? body.get("token") : null;
+        String password = body != null ? body.get("password") : null;
+        if (token == null || token.isBlank() || password == null || password.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "token_e_senha_obrigatorios"));
+        }
+
+        try {
+            String hash = passwordResetService.hashToken(token);
+            Optional<PasswordResetToken> rec = passwordResetService.findByTokenHash(hash);
+            if (rec.isEmpty()) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "token_invalido"));
+            PasswordResetToken prt = rec.get();
+            if (prt.isUsed() || prt.getExpiresAt().isBefore(java.time.Instant.now())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "token_expirado_ou_usado"));
+            }
+
+            Usuario user = prt.getUsuario();
+            // aplicar política mínima de senha (ex.: >= 8)
+            if (password.length() < 8) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "senha_pequena"));
+
+            // criptografar senha (mantendo padrão do projeto - criptografar())
+            String nova = criptografar(password);
+            user.setSenha(nova);
+            usuarioService.updateUsuario(user.getId(), user);
+
+            // marcar token como usado
+            passwordResetService.markTokenUsed(prt);
+
+            // ideally invalidate sessions / JWTs here (not implemented)
+
+            return ResponseEntity.ok(Map.of("message", "senha_redefinida"));
+        } catch (Exception ex) {
+            System.err.println("Erro em resetPassword: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "erro_interno"));
+        }
     }
 }

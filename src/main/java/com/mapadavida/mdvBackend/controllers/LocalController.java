@@ -11,7 +11,6 @@ import com.mapadavida.mdvBackend.services.LocalService;
 import com.mapadavida.mdvBackend.services.TipoAcessoService;
 import com.mapadavida.mdvBackend.services.TipoAtividadeService;
 import com.mapadavida.mdvBackend.services.TipoLocalService;
-import com.mapadavida.mdvBackend.utils.StateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -111,7 +110,7 @@ public class LocalController {
 
         // normalizar e validar estado antes de persistir
         if (localDTO.getEndereco().getEstado() != null) {
-            String estadoNorm = StateUtils.normalizeEstado(localDTO.getEndereco().getEstado());
+            String estadoNorm = Endereco.normalizeEstado(localDTO.getEndereco().getEstado());
             if (estadoNorm == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
@@ -133,7 +132,7 @@ public class LocalController {
     public ResponseEntity<LocalDTO> updateLocal(@PathVariable Long id, @RequestBody LocalDTO dto) {
         // normalizar estado com utilitário
         if (dto != null && dto.getEndereco() != null && dto.getEndereco().getEstado() != null) {
-            dto.getEndereco().setEstado(com.mapadavida.mdvBackend.utils.StateUtils.normalizeEstado(dto.getEndereco().getEstado()));
+            dto.getEndereco().setEstado(com.mapadavida.mdvBackend.models.entities.Endereco.normalizeEstado(dto.getEndereco().getEstado()));
             if (dto.getEndereco().getEstado() == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }

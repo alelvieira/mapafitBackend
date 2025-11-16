@@ -23,7 +23,8 @@ public class EnderecoDTO {
             this.id = endereco.getId();
             this.rua = endereco.getRua();
             this.cidade = endereco.getCidade();
-            this.estado = endereco.getEstado();
+            // Sempre retorna a sigla UF (normalizada) para a API
+            this.estado = Endereco.toUf(endereco.getEstado());
             this.numero = endereco.getNumero();
             this.cep = endereco.getCep();
 
