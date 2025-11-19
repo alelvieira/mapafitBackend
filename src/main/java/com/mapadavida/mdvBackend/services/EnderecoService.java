@@ -76,10 +76,41 @@ public class EnderecoService {
         return endereco;
     }
 
-    public Integer calcularDistancia(double latitude, double longitude, EnderecoDTO enderecoDTO) {
-        Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude)); // Ordem correta: longitude, latitude
-        Point point2 = geometryFactory.createPoint(new Coordinate(enderecoDTO.getLatitude().doubleValue(), enderecoDTO.getLongitude().doubleValue())); // Ordem correta: longitude, latitude
-        return (int) point.distance(point2);}
+    /**
+     * Calcula a distância em metros entre dois pontos geográficos usando a fórmula de Haversine
+     * @param latitude1 Latitude do primeiro ponto em graus decimais
+     * @param longitude1 Longitude do primeiro ponto em graus decimais
+     * @param enderecoDTO Endereço do segundo ponto
+     * @return Distância em metros (arredondada para o inteiro mais próximo)
+     */
+    public Integer calcularDistancia(double latitude1, double longitude1, EnderecoDTO enderecoDTO) {
+        double latitude2 = enderecoDTO.getLatitude().doubleValue();
+        double longitude2 = enderecoDTO.getLongitude().doubleValue();
+
+        // Raio da Terra em metros
+        final int R = 6371000;
+
+        // Converter graus para radianos
+        double lat1 = Math.toRadians(latitude1);
+        double lon1 = Math.toRadians(longitude1);
+        double lat2 = Math.toRadians(latitude2);
+        double lon2 = Math.toRadians(longitude2);
+
+        // Diferenças nas coordenadas
+        double dLat = lat2 - lat1;
+        double dLon = lon2 - lon1;
+
+        // Fórmula de Haversine
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1) * Math.cos(lat2) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        // Distância em metros
+        double distance = R * c;
+
+        return (int) Math.round(distance);
+    }
 
     public Endereco findOrSave(Endereco endereco) {
         return enderecoRepository
@@ -92,5 +123,4 @@ public class EnderecoService {
                 )
                 .orElseGet(() -> enderecoRepository.save(endereco));
     }
-
 }

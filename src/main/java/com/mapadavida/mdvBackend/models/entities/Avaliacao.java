@@ -9,6 +9,8 @@ import lombok.Setter;
 
 
 @Entity
+@Getter
+@Setter
 @Table(name = "tb_avaliacao")
 public class Avaliacao {
 

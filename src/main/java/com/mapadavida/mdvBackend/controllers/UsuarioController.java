@@ -2,19 +2,15 @@ package com.mapadavida.mdvBackend.controllers;
 
 import com.mapadavida.mdvBackend.models.dto.LoginDTO;
 import com.mapadavida.mdvBackend.models.dto.UsuarioDTO;
+import com.mapadavida.mdvBackend.models.dto.UsuarioUpdateDTO;
 import com.mapadavida.mdvBackend.models.entities.Endereco;
 import com.mapadavida.mdvBackend.models.entities.Usuario;
 import com.mapadavida.mdvBackend.models.entities.PasswordResetToken;
 import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
-import com.mapadavida.mdvBackend.repositories.EnderecoRepository;
-import com.mapadavida.mdvBackend.repositories.UsuarioRepository;
-import com.mapadavida.mdvBackend.services.EnderecoService;
-import com.mapadavida.mdvBackend.services.UsuarioService;
-import com.mapadavida.mdvBackend.services.PasswordResetService;
-import com.mapadavida.mdvBackend.services.EmailService;
+import com.mapadavida.mdvBackend.services.*;
 import jakarta.persistence.EntityNotFoundException;
-import org.hibernate.query.sqm.EntityTypeException;
-import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -24,26 +20,17 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.mapadavida.mdvBackend.security.JwtTokenProvider;
+import com.mapadavida.mdvBackend.security.UserPrincipal;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.Map;
+import java.util.*;
 
 
-import static java.time.LocalTime.now;
-
-@CrossOrigin
 @RestController
 @RequestMapping("/usuarios")
 public class UsuarioController{
@@ -52,16 +39,10 @@ public class UsuarioController{
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
     private EnderecoService enderecoService;
 
     @Autowired
     private UsuarioService usuarioService;
-
-    @Autowired
-    private EnderecoRepository enderecoRepository;
 
     @Autowired
     private PasswordResetService passwordResetService;
@@ -69,63 +50,65 @@ public class UsuarioController{
     @Autowired
     private EmailService emailService;
 
-    private ModelMapper modelMapper = new ModelMapper();
+    @Autowired
+    private JwtTokenProvider tokenProvider;
 
-    private byte[] salt = "MDV".getBytes();
+    @Autowired
+    private FileStorageService fileStorageService;
 
-    private static final java.security.Key SECRET_KEY = io.jsonwebtoken.security.Keys.hmacShaKeyFor(
-            "sua-chave-secreta-super-segura-para-jwt1234567890".getBytes()
-    );
+    private static final Logger logger = LoggerFactory.getLogger(UsuarioController.class);
+    private final byte[] salt = "MDV".getBytes();
 
     @Value("${app.frontend.url:http://localhost:3000}")
     private String appFrontendUrl;
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDTO dados, jakarta.servlet.http.HttpServletResponse response) {
-        if (dados.getEmail() == null || dados.getSenha() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "dados_invalidos"));
-        }
+    @PostMapping(value = "/login")
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getSenha()
+                    )
+            );
 
-        Usuario usuario = usuarioRepository.findByEmail(dados.getEmail()).orElse(null);
-        if (usuario == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "email_nao_encontrado"));
-        }
+            System.out.println(loginRequest.getSenha());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        if (!usuario.getSenha().equals(dados.getSenha()))
-        {
+            String jwt = tokenProvider.generateToken(authentication);
+            UserPrincipal userDetails = (UserPrincipal) authentication.getPrincipal();
+
+            // Buscar o usuário completo para retornar no response
+            UsuarioDTO usuarioDTO = usuarioService.getUsuarioById(userDetails.getId())
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado após autenticação"));
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", jwt);
+            response.put("usuario", usuarioDTO);
+
+            return ResponseEntity.ok(response);
+
+        } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "senha_incorreta"));
+                    .body(Collections.singletonMap("message", "Email ou senha inválidos"));
         }
-
-        // Registra o usuário autenticado no contexto do Spring Security
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-            usuario, null, java.util.List.of()
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        String token = gerarTokenJwt(usuario);
-
-        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("jwt", token);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true); // true em produção (HTTPS)
-        cookie.setPath("/");
-        cookie.setMaxAge(24 * 60 * 60); // 1 dia
-        response.addCookie(cookie);
-
-        UsuarioDTO usuarioDTO = new UsuarioDTO(usuario);
-        return ResponseEntity.ok(Map.of("user", usuarioDTO));
     }
+
+
 
     @GetMapping("/me")
     public ResponseEntity<UsuarioDTO> getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getPrincipal() == null || "anonymousUser".equals(auth.getPrincipal())) {
+        if (auth == null || auth.getPrincipal() == null || ! (auth.getPrincipal() instanceof UserPrincipal)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        Usuario usuario = (Usuario) auth.getPrincipal();
-        return ResponseEntity.ok(new UsuarioDTO(usuario));
+
+        UserPrincipal userPrincipal = (UserPrincipal) auth.getPrincipal();
+
+        // Carrega o DTO do usuário a partir do id presente no UserPrincipal
+        Optional<UsuarioDTO> usuarioOpt = usuarioService.getUsuarioById(userPrincipal.getId());
+        return usuarioOpt.map(u -> ResponseEntity.ok(u))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
 
@@ -141,24 +124,13 @@ public class UsuarioController{
                 sb.append(Integer.toString((passwordHash[i] & 0xff) + 0x100, 16).substring(1));
             }
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            logger.error("Erro ao calcular hash: {}", e.getMessage(), e);
         }
         return sb.toString();
     }
 
-    private String gerarTokenJwt(Usuario usuario) {
-        return io.jsonwebtoken.Jwts.builder()
-                .setSubject(usuario.getEmail())
-                .claim("id", usuario.getId())
-                .claim("nome", usuario.getNome())
-                .setIssuedAt(new java.util.Date())
-                .setExpiration(new java.util.Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000)) // 1 dia
-                .signWith(SECRET_KEY, io.jsonwebtoken.SignatureAlgorithm.HS256)
-                .compact();
-    }
-
     @PostMapping(value = "/cadastrar")
-    public ResponseEntity<Usuario> cadastrar(@RequestBody Usuario usu) {
+    public ResponseEntity<UsuarioDTO> cadastrar(@RequestBody Usuario usu) {
         Optional<Usuario> usuarioExistente = usuarioService.findByEmail(usu.getEmail());
         if (usuarioExistente.isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
@@ -169,46 +141,52 @@ public class UsuarioController{
             Endereco enderecoNormalizado = enderecoService.findOrSave(usu.getEndereco());
             usu.setEndereco(enderecoNormalizado);
 
-            usu.setSenha(criptografar(usu.getSenha()));
+            // delegate password encoding to UsuarioService (BCrypt)
             Usuario usuarioSalvo = usuarioService.createUser(usu);
-            return ResponseEntity.ok(usuarioSalvo);
+            return ResponseEntity.ok(new UsuarioDTO(usuarioSalvo));
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> getUsuarioById(@PathVariable Long id) {
-        Optional<Usuario> usuario = usuarioService.getUsuarioById(id);
+    public ResponseEntity<UsuarioDTO> getUsuarioById(@PathVariable Long id) {
+        Optional<UsuarioDTO> usuario = usuarioService.getUsuarioById(id);
         return usuario.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }
 
     @GetMapping
-    public ResponseEntity<List<UsuarioDTO>> getAllUsuarios() {
+    public ResponseEntity<Map<String, Object>> getAllUsuarios() {
         List<UsuarioDTO> usuarios = usuarioService.getAllUsuarios();
-        return ResponseEntity.ok(usuarios);
+        Map<String, Object> response = new HashMap<>();
+        response.put("usuarios", usuarios);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/tipoUsuario/{tipoUsuario}")
-    public ResponseEntity<List<Usuario>> getUsuariosByTipo(@PathVariable TipoUsuario tipoUsuario) {
+    public ResponseEntity<Map<String, Object>> getUsuariosByTipo(@PathVariable TipoUsuario tipoUsuario) {
         try {
-            List<Usuario> usuarios = usuarioService.getUsuariosByTipo(tipoUsuario);
+            List<UsuarioDTO> usuarios = usuarioService.getUsuariosByTipo(tipoUsuario);
             if (usuarios.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+                return ResponseEntity.notFound().build();
             }
-            return ResponseEntity.ok(usuarios);
+            Map<String, Object> response = new HashMap<>();
+            response.put("usuarios", usuarios);
+            return ResponseEntity.ok(response);
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioDTO> updateUsuario(@PathVariable Long id, @RequestBody Usuario usuarioDetails) {
-        UsuarioDTO updatedUsuario = usuarioService.updateUsuario(id, usuarioDetails);
-        if (updatedUsuario != null) {
-            return ResponseEntity.ok(updatedUsuario);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    public ResponseEntity<Map<String, Object>> updateUsuario(@PathVariable Long id, @RequestBody UsuarioUpdateDTO usuarioUpdateDTO) {
+        try {
+            UsuarioDTO updatedUsuario = usuarioService.updateUsuario(id, usuarioUpdateDTO);
+            Map<String, Object> response = new HashMap<>();
+            response.put("usuario", updatedUsuario);
+            return ResponseEntity.ok(response);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 
@@ -292,10 +270,11 @@ public class UsuarioController{
             // aplicar política mínima de senha (ex.: >= 8)
             if (password.length() < 8) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "senha_pequena"));
 
-            // criptografar senha (mantendo padrão do projeto - criptografar())
-            String nova = criptografar(password);
-            user.setSenha(nova);
-            usuarioService.updateUsuario(user.getId(), user);
+            // Passar a senha "raw" para o service; o service irá codificá-la com BCrypt
+            UsuarioUpdateDTO usuarioUpdateDTO = new UsuarioUpdateDTO();
+            usuarioUpdateDTO.setSenha(password);
+            usuarioService.updateUsuario(user.getId(), usuarioUpdateDTO);
+
 
             // marcar token como usado
             passwordResetService.markTokenUsed(prt);
@@ -307,5 +286,73 @@ public class UsuarioController{
             System.err.println("Erro em resetPassword: " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "erro_interno"));
         }
+    }
+
+    @PostMapping("/{userId}/foto")
+    public ResponseEntity<Map<String, Object>> uploadFoto(@PathVariable Long userId, @RequestParam("file") MultipartFile file) {
+        try {
+            String fileUrl = fileStorageService.storeFile(file, userId);
+            UsuarioDTO usuarioAtualizadoDTO = usuarioService.updateFoto(userId, fileUrl);
+            Map<String, Object> response = new HashMap<>();
+            response.put("usuario", usuarioAtualizadoDTO);
+            return ResponseEntity.ok(response);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // Convenience endpoint: upload photo for currently authenticated user (uses JWT)
+    @PostMapping("/me/foto")
+    public ResponseEntity<Map<String, Object>> uploadFotoMe(@RequestParam("file") MultipartFile file) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null || !(auth.getPrincipal() instanceof UserPrincipal)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        UserPrincipal userPrincipal = (UserPrincipal) auth.getPrincipal();
+        Long userId = userPrincipal.getId();
+        try {
+            String fileUrl = fileStorageService.storeFile(file, userId);
+            UsuarioDTO usuarioAtualizadoDTO = usuarioService.updateFoto(userId, fileUrl);
+            Map<String, Object> response = new HashMap<>();
+            response.put("usuario", usuarioAtualizadoDTO);
+            return ResponseEntity.ok(response);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/{userId}/conquistas")
+    public ResponseEntity<Map<String, Object>> getConquistasDoUsuario(@PathVariable Long userId) {
+        Optional<UsuarioDTO> usuarioOpt = usuarioService.getUsuarioById(userId);
+        return usuarioOpt
+                .map(usuario -> {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("conquistas", usuario.getConquistas());
+                    return ResponseEntity.ok(response);
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // Convenience endpoint: get achievements of the authenticated user (uses JWT)
+    @GetMapping("/me/conquistas")
+    public ResponseEntity<Map<String, Object>> getConquistasDoUsuarioMe() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null || !(auth.getPrincipal() instanceof UserPrincipal)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        UserPrincipal userPrincipal = (UserPrincipal) auth.getPrincipal();
+        Long userId = userPrincipal.getId();
+        Optional<UsuarioDTO> usuarioOpt = usuarioService.getUsuarioById(userId);
+        return usuarioOpt
+                .map(usuario -> {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("conquistas", usuario.getConquistas());
+                    return ResponseEntity.ok(response);
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

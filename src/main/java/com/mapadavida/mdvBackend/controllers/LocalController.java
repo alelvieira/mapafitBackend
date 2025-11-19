@@ -28,7 +28,7 @@ import java.util.Map;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/local")
+@RequestMapping("/locais")
 public class LocalController {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalController.class);
@@ -54,8 +54,16 @@ public class LocalController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LocalDTO>> getAllLocais() {
-        return ResponseEntity.ok(localService.getLocais());
+    public ResponseEntity<List<LocalDTO>> getAllLocais(
+            @RequestParam(name = "latitude", required = false) Double latitude,
+            @RequestParam(name = "longitude", required = false) Double longitude) {
+
+        if ((latitude == null && longitude != null) || (latitude != null && longitude == null)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<LocalDTO> locais = localService.getLocais(latitude, longitude);
+        return ResponseEntity.ok(locais);
     }
 
     @GetMapping("/aprovados")
@@ -63,28 +71,30 @@ public class LocalController {
         return localService.listarAprovados();
     }
 
-
-    // Adiciona endpoints equivalentes com hífen (ex.: /tipo-acesso) para compatibilidade com requests existentes
-    @GetMapping("/tipo-local")
-    public ResponseEntity<List<TipoLocal>> listarTiposLocaisHyphen() {
-        return ResponseEntity.ok(tipoLocalRepository.findAll());
+    @GetMapping("/tipo_local/{id}")
+    public ResponseEntity<List<LocalDTO>> getLocaisByTipo(@PathVariable Long id) {
+        List<LocalDTO> locais = localService.findLocaisByTipoLocal(id);
+        return ResponseEntity.ok(locais);
     }
 
-    @GetMapping("/tipo-atividade")
-    public ResponseEntity<List<TipoAtividade>> listarTiposAtividadesHyphen() {
-        return ResponseEntity.ok(tipoAtividadeRepository.findAll());
+    @GetMapping("/tipo_atividade/{id}")
+    public ResponseEntity<List<LocalDTO>> getLocaisByTipoAtividade(@PathVariable Long id) {
+        List<LocalDTO> locais = localService.findLocaisByTipoAtividade(id);
+        return ResponseEntity.ok(locais);
     }
 
-    @GetMapping("/tipo-acesso")
-    public ResponseEntity<List<TipoAcesso>> listarTiposAcessoHyphen() {
-        return ResponseEntity.ok(tipoAcessoRepository.findAll());
+    @GetMapping("/tipo_acesso/{id}")
+    public ResponseEntity<List<LocalDTO>> getLocaisByTipoAcesso(@PathVariable Long id) {
+        List<LocalDTO> locais = localService.findLocaisByTipoAcesso(id);
+        return ResponseEntity.ok(locais);
     }
 
     @GetMapping("/proximos")
     public ResponseEntity<List<LocalDTO>> buscarProximos(@RequestParam double latitude,
-                                                         @RequestParam double longitude,
-                                                         @RequestParam double raio) {
-        return ResponseEntity.ok(localService.findLocaisProximos(latitude, longitude, raio));
+                                                            @RequestParam double longitude,
+                                                            @RequestParam double raio) {
+        List<LocalDTO> locais = localService.findLocaisProximos(latitude, longitude, raio);
+        return ResponseEntity.ok(locais);
     }
 
     @PostMapping("/novo")

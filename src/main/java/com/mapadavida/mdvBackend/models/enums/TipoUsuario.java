@@ -4,5 +4,4 @@ public enum TipoUsuario {
     VISITANTE,
     CADASTRADO,
     ADMINISTRADOR
-
 }

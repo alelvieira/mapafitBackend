@@ -33,7 +33,25 @@ public class LocalService {
 
 
     public List<LocalDTO> getLocais() {
+        return getLocais(null, null);
+    }
+
+    public List<LocalDTO> getLocais(Double latitude, Double longitude) {
         List<LocalDTO> locais = localRepository.findAll().stream().map(LocalDTO::new).toList();
+
+        if (latitude != null && longitude != null) {
+            for (LocalDTO local : locais) {
+                if (local.getEndereco() != null) {
+                    int distancia = enderecoService.calcularDistancia(
+                        latitude,
+                        longitude,
+                        local.getEndereco()
+                    );
+                    local.setDistancia(distancia);
+                }
+            }
+        }
+
         return locais;
     }
 
