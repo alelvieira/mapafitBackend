@@ -37,28 +37,32 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // Rotas públicas
-                .requestMatchers(
-                    "/usuarios/login",
-                    "/usuarios/cadastrar",
-                    "/v3/api-docs/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html"
-                ).permitAll()
-                // Rotas de cache - apenas para administradores
-                .requestMatchers("/api/cache/**").hasRole("ADMIN")
-                // Todas as outras requisições requerem autenticação
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // 🔓 Rotas públicas (sem autenticação)
+                        .requestMatchers(
+                                "/usuarios/login",
+                                "/usuarios/cadastrar",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+
+                        // Rotas restritas a admin (exemplo seu)
+                        .requestMatchers("/api/cache/**").hasRole("ADMIN")
+
+                        // 🔒 Qualquer outra rota exige login via JWT
+                        .anyRequest().authenticated()
+                )
+                // Filtro JWT antes do filtro padrão do Spring
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
-    
+
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();

@@ -72,7 +72,7 @@ public class UsuarioController{
                     )
             );
 
-            System.out.println(loginRequest.getSenha());
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             String jwt = tokenProvider.generateToken(authentication);
