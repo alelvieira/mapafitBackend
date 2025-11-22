@@ -1,47 +1,56 @@
-INSERT INTO public.tb_endereco (rua, cidade, estado, bairro, cep, data_criacao)
+-- Define explicitamente o schema para evitar problemas de qualificação
+SET search_path TO public;
+
+INSERT INTO tb_endereco (rua, cidade, estado, numero, cep, data_criacao)
 VALUES
-    ('Rua Melchiades Silveira do Valle, 451', 'Curitiba', 'PR', null, now()),
-    ('Rua Mateus Leme, 4672', 'Curitiba', 'PR', null, now()),
-    ('Rua Rodrigo de Freitas, 391', 'Curitiba', 'PR', null, now()),
-    ('Rua Guilherme Ihlenfeldt, 233', 'Curitiba', 'PR', null, now()),
-    ('Rua Rio Jari, 1527', 'Curitiba', 'PR', null, now()),
-    ('Avenida Luiza Gulin, 115', 'Curitiba', 'PR', null, now()),
-    ('Rua Pintor Ricardo Krieger, 550', 'Curitiba', 'PR', null, now()),
-    ('Rua Arno Feliciano de Castilho, 13271', 'Curitiba', 'PR', null, now()),
-    ('Rua Guilherme de Souza Valente, 145', 'Curitiba', 'PR', null, now()),
-    ('Rua Cel. Domingos Soares, 1896', 'Curitiba', 'PR', null, now()),
-    ('Rua Paulo Friebe, 20', 'Curitiba', 'PR', null, now()),
-    ('Rua Laranjeiras, 170', 'Curitiba', 'PR', null, now()),
-    ('Rua Antônio Cândido Cavalim, 29', 'Curitiba', 'PR', null, now()),
-    ('Rua Prof. Guilherme Butler, 538', 'Curitiba', 'PR', null, now()),
-    ('Rua Amaury Lange Silvério, 639', 'Curitiba', 'PR', null, now()),
-    ('Rua Rosa Sanson da Silva, 20', 'Curitiba', 'PR', null, now()),
-    ('Rua Rodrigo de Freitas, 391', 'Curitiba', 'PR', null, now()),
-    ('Rua Cel. Ary Pinho, 680', 'Curitiba', 'PR', null, now()),
-    ('Rua Erasmo Maeder, 222', 'Curitiba', 'PR', null, now()),
-    ('Rua Egas Rosa Sampaio, 40', 'Curitiba', 'PR', null, now()),
-    ('Rua Manife Tacla, 1246', 'Curitiba', 'PR', null, now()),
-    ('Rua Avicena, 90', 'Curitiba', 'PR', null, now()),
-    ('Rua Santo Afonso de Ligório, 290', 'Curitiba', 'PR', null, now()),
-    ('Rua Paulo Mader Bittencourt, 110', 'Curitiba', 'PR', null, now()),
-    ('Rua Idalino Francisco Túlio, 575', 'Curitiba', 'PR', null, now()),
-    ('Rua Rio Guaíba, 1250', 'Curitiba', 'PR', null, now()),
-    ('Rua Costa Rica, 1614', 'Curitiba', 'PR', null, now()),
-    ('Rua Howell Lewis Fry, 181', 'Curitiba', 'PR', null, now()),
-    ('Rua Guido Scotti, 352', 'Curitiba', 'PR', null, now()),
-    ('Rua Doutor Pedro Augusto Menna Barreto Monclaro, 3020', 'Curitiba', 'PR', 80.250-040, now()),
-    ('Rua Daniel Cesário Pereira, 681', 'Curitiba', 'PR', 82.410-180, now()),
-    ('Avenida Paraná, 1371', 'Curitiba', 'PR', 82.510-000, now());
+    ('Rua Exemplo','Cidade Exemplo','SP',100,'12345678',2024-03-14 10:00:00.000000),
+    ('Avenida Central','São Paulo','SP',200,'01234567',2024-03-14 10:00:00.000000),
+    ('Rua dos Sonhos','Rio de Janeiro','RJ',300,'89012345',2024-03-14 10:00:00.000000),
+    ('Rua Jardim Botânico','Curitiba','PR',400,'80210391',2025-11-18 23:40:57.266812),
+    ('Avenida Afonso Pena','Belo Horizonte','MG',500,'30130001',2025-11-18 23:40:57.266812),
+    ('Avenida Oceânica','Salvador','BA',600,'40140130',2025-11-18 23:40:57.266812),
+    ('Avenida Ipiranga','Porto Alegre','RS',700,'90160090',2025-11-18 23:40:57.266812),
+    ('Rua Melchiades Silveira do Valle', 'Curitiba', 'PR', 451, '80000000', now()),
+    ('Rua Mateus Leme', 'Curitiba', 'PR', 4672, '00000000', now()),
+    ('Rua Rodrigo de Freitas', 'Curitiba', 'PR', 391, '00000000', now()),
+    ('Rua Guilherme Ihlenfeldt', 'Curitiba', 'PR', 233, '00000000', now()),
+    ('Rua Rio Jari', 'Curitiba', 'PR', 1527, '00000000', now()),
+    ('Avenida Luiza Gulin', 'Curitiba', 'PR', 115, '00000000', now()),
+    ('Rua Pintor Ricardo Krieger', 'Curitiba', 'PR', 550, '00000000', now()),
+    ('Rua Arno Feliciano de Castilho', 'Curitiba', 'PR', 13271, '00000000', now()),
+    ('Rua Guilherme de Souza Valente', 'Curitiba', 'PR', 145, '00000000', now()),
+    ('Rua Cel. Domingos Soares', 'Curitiba', 'PR', 1896, '00000000', now()),
+    ('Rua Paulo Friebe', 'Curitiba', 'PR', 20, '00000000', now()),
+    ('Rua Laranjeiras', 'Curitiba', 'PR', 170, '00000000', now()),
+    ('Rua Antônio Cândido Cavalim', 'Curitiba', 'PR', 29, '00000000', now()),
+    ('Rua Prof. Guilherme Butler', 'Curitiba', 'PR', 538, '00000000', now()),
+    ('Rua Amaury Lange Silvério', 'Curitiba', 'PR', 639, '00000000', now()),
+    ('Rua Rosa Sanson da Silva', 'Curitiba', 'PR', 20, '00000000', now()),
+    ('Rua Rodrigo de Freitas', 'Curitiba', 'PR', 391, '00000000', now()),
+    ('Rua Cel. Ary Pinho', 'Curitiba', 'PR', 680, '00000000', now()),
+    ('Rua Erasmo Maeder', 'Curitiba', 'PR', 222, '00000000', now()),
+    ('Rua Egas Rosa Sampaio', 'Curitiba', 'PR', 40, '00000000', now()),
+    ('Rua Manife Tacla', 'Curitiba', 'PR', 1246, '00000000', now()),
+    ('Rua Avicena', 'Curitiba', 'PR', 90, '00000000', now()),
+    ('Rua Santo Afonso de Ligório', 'Curitiba', 'PR', 290, '00000000', now()),
+    ('Rua Paulo Mader Bittencourt', 'Curitiba', 'PR', 110, '00000000', now()),
+    ('Rua Idalino Francisco Túlio', 'Curitiba', 'PR', 575, '00000000', now()),
+    ('Rua Rio Guaíba', 'Curitiba', 'PR', 1250, '00000000', now()),
+    ('Rua Costa Rica', 'Curitiba', 'PR', 1614, '00000000', now()),
+    ('Rua Howell Lewis Fry', 'Curitiba', 'PR', 181, '00000000', now()),
+    ('Rua Guido Scotti', 'Curitiba', 'PR', 352, '00000000', now()),
+    ('Rua Doutor Pedro Augusto Menna Barreto Monclaro', 'Curitiba', 'PR', 3020, '80250040', now()),
+    ('Rua Daniel Cesário Pereira', 'Curitiba', 'PR', 681, '82410180', now()),
+    ('Avenida Paraná', 'Curitiba', 'PR', 1371, '82510000', now());
 
 
 
-INSERT INTO public.tb_usuario (nome_usuario, idade_usuario, sexo_usuario, tipo_usuario, senha_usuario, email_usuario, id_endereco)
+INSERT INTO tb_usuario (nome_usuario, idade_usuario, sexo_usuario, tipo_usuario, senha_usuario, email_usuario, id_endereco)
 VALUES
-    ('Maria', 80, 'Feminino', 'CADASTRADO', 'd9015ac639774caa148c8860f06f0d0092a0dfb3a851a8e04bc5887e79c2ae2b',  'maria@email.com', 1),
-    ('Admin', 75, 'Masculino', 'ADMINISTRADOR', '12345678', 'admin@email.com', 2);
+('Admin', 75, 'Masculino', 'ADMINISTRADOR', '12345678', 'admin@email.com', 2);
 
 
-INSERT INTO public.tb_tipo_atividade (nome)
+INSERT INTO tb_tipo_atividade (nome)
 VALUES
     ('Caminhada'),
     ('Corrida'),
@@ -54,7 +63,7 @@ VALUES
     ('LutasArtesMarciais'),
     ('Danca');
 
-INSERT INTO public.tb_tipo_local (nome)
+INSERT INTO tb_tipo_local (nome)
 VALUES
     ('Parque'),
     ('Área verde'),
@@ -62,12 +71,12 @@ VALUES
     ('Dança'),
     ('Esporte');
 
-INSERT INTO public.tb_tipo_acesso (nome)
+INSERT INTO tb_tipo_acesso (nome)
 VALUES
     ('Gratuito'),
     ('Pago');
 
-INSERT INTO public.tb_local (nome, aprovado, endereco_id, tipo_atividade_id, informacoes_adicionais, horarios_funcionamento, tipo_acesso_id)
+INSERT INTO tb_local (nome, aprovado, endereco_id, tipo_atividade_id, informacoes_adicionais, horarios_funcionamento, tipo_acesso_id)
 VALUES
     ('Parque Tingui', true, 1, 1, 'Parque', '24h', 1),
     ('Parque São Lourenço', true, 2, 1, 'Parque', '24h', 1),
@@ -87,10 +96,10 @@ VALUES
     ('Estribo Ahu / João Túlio', true, 16, 1, 'Academia ao Ar Livre', '24h', 1),
     ('Parque Bacacheri (2ª Unidade)', true, 17, 1, 'Parque', '24h', 1),
     ('Praça Anna Maurer', true, 18, 1, 'Praça', '24h', 1),
-    ('Erasmo Maeder', true, 19, 1, 'Academia ao Ar Livre', '24h', 1),
-    ('Anibal Afonso', true, 20, 1, 'Academia ao Ar Livre', '24h', 1),
-    ('São Marcos', true, 21, 1, 'Academia ao Ar Livre', '24h', 1),
-    ('Cruzeiro do Sul', true, 22, 1, 'Academia ao Ar Livre', '24h', 1),
+    ('Erasmo Maeder', false 19, 1, 'Academia ao Ar Livre', '24h', 1),
+    ('Anibal Afonso', false, 20, 1, 'Academia ao Ar Livre', '24h', 1),
+    ('São Marcos', false, 21, 1, 'Academia ao Ar Livre', '24h', 1),
+    ('Cruzeiro do Sul', false, 22, 1, 'Academia ao Ar Livre', '24h', 1),
     ('Praça Cap. Joviniano P. de Camargo', true, 23, 1, 'Praça', '24h', 1),
     ('Praça Estevão Mussak', true, 24, 1, 'Praça com futebol', '24h', 1),
     ('Faxinal', true, 25, 1, 'Academia ao Ar Livre', '24h', 1),

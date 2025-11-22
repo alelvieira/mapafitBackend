@@ -64,6 +64,7 @@ com\mapadavida\mdvBackend\services\EnderecoService.class
 com\mapadavida\mdvBackend\MdvBackendApplication.class
 com\mapadavida\mdvBackend\models\enums\TipoUsuario.class
 com\mapadavida\mdvBackend\config\SecurityConfig.class
+com\mapadavida\mdvBackend\utils\StateUtils.class
 com\mapadavida\mdvBackend\controllers\UsuarioController.class
 com\mapadavida\mdvBackend\models\dto\TipoDetalheDTO.class
 com\mapadavida\mdvBackend\models\dto\AvaliacaoUpdateDTO.class
@@ -79,8 +80,8 @@ com\mapadavida\mdvBackend\models\entities\Checkin.class
 com\mapadavida\mdvBackend\models\entities\TipoAtividade.class
 com\mapadavida\mdvBackend\controllers\CheckinController.class
 com\mapadavida\mdvBackend\models\entities\PontuacaoUsuario.class
+com\mapadavida\mdvBackend\util\HashGenerator.class
 com\mapadavida\mdvBackend\models\dto\TipoLocalDTO.class
-com\mapadavida\mdvBackend\configurations\WebMvcConfig.class
 com\mapadavida\mdvBackend\repositories\ConquistaRepository.class
 com\mapadavida\mdvBackend\models\dto\ConquistaPontuacaoDTO.class
 com\mapadavida\mdvBackend\models\entities\GrupoUsuarioId.class
