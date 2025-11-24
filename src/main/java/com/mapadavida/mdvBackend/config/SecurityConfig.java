@@ -20,6 +20,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
+import org.springframework.http.HttpMethod; // permit GET on tipos endpoints
 
 @Configuration
 @EnableWebSecurity
@@ -27,11 +28,9 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final UserDetailsService userDetailsService;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, UserDetailsService userDetailsService) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.userDetailsService = userDetailsService;
     }
 
     @Bean
@@ -49,6 +48,12 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+
+                        // Allow CORS preflight
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Allow public GET access to tipos endpoints used by the frontend (and permit error path)
+                        .requestMatchers(HttpMethod.GET, "/locais/**").permitAll()
+                        .requestMatchers("/error").permitAll()
 
                         // Rotas restritas a admin (exemplo seu)
                         .requestMatchers("/api/cache/**").hasRole("ADMIN")

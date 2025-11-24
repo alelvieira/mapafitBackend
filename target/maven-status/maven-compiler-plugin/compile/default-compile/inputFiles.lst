@@ -18,8 +18,8 @@ C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\s
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\models\entities\Usuario.java
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\models\dto\GrupoUsuarioIdDTO.java
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\models\dto\PublicacaoDTO.java
-C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\utils\StateUtils.java
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\models\entities\Visitas.java
+C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\services\GeocodingService.java
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\repositories\TipoAcessoRepository.java
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\models\entities\GrupoUsuario.java
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\models\dto\PontuacaoUsuarioDTO.java
@@ -43,6 +43,7 @@ C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\m
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\repositories\AvaliacaoRepository.java
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\models\enums\TipoUsuario.java
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\models\dto\AvaliacaoDTO.java
+C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\models\dto\AuthResponse.java
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\models\entities\Endereco.java
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\repositories\CheckinRepository.java
 C:\Users\Aless\IdeaProjects\mdvBackend\src\main\java\com\mapadavida\mdvBackend\models\entities\TipoLocal.java

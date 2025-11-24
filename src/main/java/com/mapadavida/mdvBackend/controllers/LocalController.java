@@ -156,41 +156,17 @@ public class LocalController {
         return geocodingService.geocode(endereco);
     }
 
-    @DeleteMapping("/tipo-local/{id}")
-    public ResponseEntity<Void> deleteTipoLocal(@PathVariable Long id) {
-        if (!tipoLocalRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        tipoLocalService.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/tipo-atividade/{id}")
-    public ResponseEntity<Void> deleteTipoAtividade(@PathVariable Long id) {
-        if (!tipoAtividadeRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        tipoAtividadeService.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/tipo-acesso/{id}")
-    public ResponseEntity<Void> deleteTipoAcesso(@PathVariable Long id) {
-        var tipoAcesso = tipoAcessoRepository.findById(id);
-        if (tipoAcesso.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        tipoAcessoService.delete(tipoAcesso.get());
-        return ResponseEntity.noContent().build();
-    }
-
-    // Adicionados endpoints CRUD para TipoLocal, TipoAtividade e TipoAcesso (POST, PUT, GET por id)
-
     // TipoLocal
     @PostMapping("/tipo-local")
     public ResponseEntity<TipoLocal> createTipoLocal(@RequestBody TipoLocal tipoLocal) {
         TipoLocal saved = tipoLocalService.save(tipoLocal);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    @GetMapping("/tipo-local")
+    public ResponseEntity<List<TipoLocal>> getAllTipoLocal() {
+        List<TipoLocal> list = tipoLocalService.findAll();
+        return ResponseEntity.ok(list);
     }
 
     @PutMapping("/tipo-local/{id}")
@@ -209,11 +185,27 @@ public class LocalController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @DeleteMapping("/tipo-local/{id}")
+    public ResponseEntity<Void> deleteTipoLocal(@PathVariable Long id) {
+        if (!tipoLocalRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        tipoLocalService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
     // TipoAtividade
     @PostMapping("/tipo-atividade")
     public ResponseEntity<TipoAtividade> createTipoAtividade(@RequestBody TipoAtividade tipoAtividade) {
         TipoAtividade saved = tipoAtividadeService.save(tipoAtividade);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    @GetMapping("/tipo-atividade")
+    public ResponseEntity<List<TipoAtividade>> getAllTipoAtividade() {
+        List<TipoAtividade> list = tipoAtividadeService.findAll();
+        return ResponseEntity.ok(list);
     }
 
     @PutMapping("/tipo-atividade/{id}")
@@ -232,11 +224,26 @@ public class LocalController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @DeleteMapping("/tipo-atividade/{id}")
+    public ResponseEntity<Void> deleteTipoAtividade(@PathVariable Long id) {
+        if (!tipoAtividadeRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        tipoAtividadeService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
     // TipoAcesso
     @PostMapping("/tipo-acesso")
     public ResponseEntity<TipoAcesso> createTipoAcesso(@RequestBody TipoAcesso tipoAcesso) {
         TipoAcesso saved = tipoAcessoService.save(tipoAcesso);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    @GetMapping("/tipo-acesso")
+    public ResponseEntity<List<TipoAcesso>> getAllTipoAcesso() {
+        List<TipoAcesso> list = tipoAcessoService.findAll();
+        return ResponseEntity.ok(list);
     }
 
     @PutMapping("/tipo-acesso/{id}")
@@ -260,4 +267,13 @@ public class LocalController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @DeleteMapping("/tipo-acesso/{id}")
+    public ResponseEntity<Void> deleteTipoAcesso(@PathVariable Long id) {
+        var tipoAcesso = tipoAcessoRepository.findById(id);
+        if (tipoAcesso.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        tipoAcessoService.delete(tipoAcesso.get());
+        return ResponseEntity.noContent().build();
+    }
 }
