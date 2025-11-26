@@ -21,7 +21,7 @@ public class UsuarioDTO {
     private String sexo;
     private String idade;
     private String telefone;
-    private Endereco endereco;
+    private EnderecoDTO endereco;
     private TipoUsuario tipoUsuario;
     private String fotoUrl;
     private Integer pontos;
@@ -29,6 +29,11 @@ public class UsuarioDTO {
 
     public UsuarioDTO(Usuario usuario) {
         BeanUtils.copyProperties(usuario, this);
+        if (usuario.getEndereco() != null) {
+            this.endereco = new EnderecoDTO(usuario.getEndereco());
+        }
     }
 
 }
+
+

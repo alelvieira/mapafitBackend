@@ -4,6 +4,7 @@ import com.mapadavida.mdvBackend.models.dto.LoginDTO;
 import com.mapadavida.mdvBackend.models.dto.UsuarioDTO;
 import com.mapadavida.mdvBackend.models.dto.UsuarioUpdateDTO;
 import com.mapadavida.mdvBackend.models.entities.Usuario;
+import com.mapadavida.mdvBackend.models.entities.Endereco;
 import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
 import com.mapadavida.mdvBackend.repositories.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -68,7 +69,11 @@ public class UsuarioService {
             usuario.setSexo(usuarioUpdated.getSexo());
             usuario.setIdade(usuarioUpdated.getIdade());
             usuario.setTelefone(usuarioUpdated.getTelefone());
-            usuario.setEndereco(usuarioUpdated.getEndereco());
+            // Se veio um Endereco no payload, certifica-se de que ele exista no banco
+            if (usuarioUpdated.getEndereco() != null) {
+                Endereco enderecoPersistido = enderecoService.findOrSave(usuarioUpdated.getEndereco());
+                usuario.setEndereco(enderecoPersistido);
+            }
             usuario.setTipoUsuario(usuarioUpdated.getTipoUsuario());
             if (usuarioUpdated.getSenha() != null && !usuarioUpdated.getSenha().isBlank()) {
                 String nova = usuarioUpdated.getSenha();
