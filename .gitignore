@@ -1,0 +1,5 @@
+/target/
+/.idea/
+.env
+# add other IDE/project files you don't want to commit
+
