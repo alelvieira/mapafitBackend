@@ -13,7 +13,7 @@ public class CheckinDTO {
     private LocalDateTime fim;
     private Long usuarioId;
     private String usuarioNome;
-    private Long localId;
+    private LocalDTO local;
     private String localNome;
     private String tipoAtividadeNome;
 
@@ -23,7 +23,7 @@ public class CheckinDTO {
         this.fim = checkin.getFim();
         this.usuarioId = checkin.getUsuario().getId();
         this.usuarioNome = checkin.getUsuario().getNome();
-        this.localId = checkin.getLocal().getId();
+        this.local = new LocalDTO(checkin.getLocal());
         this.localNome = checkin.getLocal().getNome();
         this.tipoAtividadeNome = checkin.getTipoAtividade().getNome();
     }

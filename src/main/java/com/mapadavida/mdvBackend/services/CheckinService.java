@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class CheckinService {
@@ -62,4 +63,14 @@ public class CheckinService {
 
         return new CheckinDTO(updatedCheckin);
     }
+
+    @Transactional
+    public List<CheckinDTO> findCheckIns(Long userId) {
+        Usuario usuario = usuarioService.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+
+        List<Checkin> checkins = checkinRepository.findByUsuarioId(usuario.getId());
+        return checkins.stream().map(CheckinDTO::new).toList();
+    }
+
 }

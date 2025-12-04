@@ -5,6 +5,7 @@ import com.mapadavida.mdvBackend.models.entities.Checkin;
 import com.mapadavida.mdvBackend.repositories.CheckinRepository;
 import com.mapadavida.mdvBackend.services.CheckinService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +13,10 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import java.time.LocalDateTime;
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/checkins")
 @CrossOrigin
@@ -32,6 +36,7 @@ public class CheckinController {
             CheckinDTO checkinDTO = checkinService.performCheckIn(userId, localId, tipoAtividadeId);
             return ResponseEntity.ok(checkinDTO);
         } catch (EntityNotFoundException e) {
+            log.error("EntityNotFoundException: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -47,23 +52,35 @@ public class CheckinController {
     }
 
     @GetMapping("/checkin-status")
-    public ResponseEntity<String> checkInStatus(@RequestParam Long checkinId) {
-        // Buscar o checkin pelo ID
+    public ResponseEntity<Map<String, String>> checkInStatus(@RequestParam Long checkinId) {
         Checkin checkin = checkinRepository.findById(checkinId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Checkin not found"));
 
-        // Verificar o status do checkin
         LocalDateTime now = LocalDateTime.now();
 
         if (checkin.getFim() != null) {
-            return ResponseEntity.ok("Checked out already");
+            return ResponseEntity.ok(Map.of("status", "Checked out already"));
         }
 
         Duration duration = Duration.between(checkin.getInicio(), now);
-        if (duration.toMinutes() >= 10) {
-            return ResponseEntity.ok("Enable checkout");
+        if (duration.toMinutes() >= 1) {
+
+            return ResponseEntity.ok(Map.of("status", "Enable checkout"));
         } else {
-            return ResponseEntity.ok("Still within check-in time");
+            return ResponseEntity.ok(Map.of("status","Still within check-in time"));
         }
     }
+
+    @GetMapping
+    public ResponseEntity<List<CheckinDTO>> checkIn(
+            @RequestParam Long userId) {
+        try {
+            List<CheckinDTO> checkinDTO = checkinService.findCheckIns(userId);
+            return ResponseEntity.ok(checkinDTO);
+        } catch (EntityNotFoundException e) {
+            log.error("EntityNotFoundException: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

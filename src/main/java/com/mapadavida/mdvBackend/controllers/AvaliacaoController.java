@@ -50,7 +50,6 @@ public class AvaliacaoController {
         }
     }
 
-    // Endpoint unificado para buscar todas as avaliações, com filtros opcionais
     @GetMapping
     public ResponseEntity<List<AvaliacaoResponseDTO>> findAll(
             @RequestParam(required = false) Long localId,

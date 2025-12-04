@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
-    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/2ad7def4-1d5b-4bde-9a49-d281dc8f0503/console_3.sql" value="2ad7def4-1d5b-4bde-9a49-d281dc8f0503" />
-    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/2ad7def4-1d5b-4bde-9a49-d281dc8f0503/console_4.sql" value="2ad7def4-1d5b-4bde-9a49-d281dc8f0503" />
-    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/2ad7def4-1d5b-4bde-9a49-d281dc8f0503/console_5.sql" value="2ad7def4-1d5b-4bde-9a49-d281dc8f0503" />
-    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/2ad7def4-1d5b-4bde-9a49-d281dc8f0503/console_6.sql" value="2ad7def4-1d5b-4bde-9a49-d281dc8f0503" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V3__Update_tb_usuario_constraint.sql" value="2ad7def4-1d5b-4bde-9a49-d281dc8f0503" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/import.sql" value="2ad7def4-1d5b-4bde-9a49-d281dc8f0503" />
+    <file url="file://$PROJECT_DIR$/.idea/queries/Query.sql" value="2ad7def4-1d5b-4bde-9a49-d281dc8f0503" />
+    <file url="file://$PROJECT_DIR$/.idea/queries/Query_1.sql" value="2ad7def4-1d5b-4bde-9a49-d281dc8f0503" />
+    <file url="file://$PROJECT_DIR$/.idea/queries/Query_6.sql" value="2ad7def4-1d5b-4bde-9a49-d281dc8f0503" />
   </component>
 </project>

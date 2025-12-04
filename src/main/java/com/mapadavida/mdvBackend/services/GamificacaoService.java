@@ -43,7 +43,6 @@ public class GamificacaoService {
     }
 
     private void processarEventoAvaliacao(Usuario usuario) {
-        // Regra: Ganha conquista na primeira avaliação
         long totalAvaliacoes = avaliacaoRepository.countByUsuarioId(usuario.getId());
 
         if (totalAvaliacoes == 1) {

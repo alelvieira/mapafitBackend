@@ -279,7 +279,6 @@ public class UsuarioController{
             // marcar token como usado
             passwordResetService.markTokenUsed(prt);
 
-            // ideally invalidate sessions / JWTs here (not implemented)
 
             return ResponseEntity.ok(Map.of("message", "senha_redefinida"));
         } catch (Exception ex) {
@@ -339,7 +338,7 @@ public class UsuarioController{
 
     // Convenience endpoint: get achievements of the authenticated user (uses JWT)
     @GetMapping("/me/conquistas")
-    public ResponseEntity<Map<String, Object>> getConquistasDoUsuarioMe() {
+    public ResponseEntity<Optional<UsuarioDTO>> getConquistasDoUsuarioMe() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getPrincipal() == null || !(auth.getPrincipal() instanceof UserPrincipal)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -347,12 +346,14 @@ public class UsuarioController{
         UserPrincipal userPrincipal = (UserPrincipal) auth.getPrincipal();
         Long userId = userPrincipal.getId();
         Optional<UsuarioDTO> usuarioOpt = usuarioService.getUsuarioById(userId);
-        return usuarioOpt
+         usuarioOpt
                 .map(usuario -> {
                     Map<String, Object> response = new HashMap<>();
                     response.put("conquistas", usuario.getConquistas());
                     return ResponseEntity.ok(response);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
+
+        return ResponseEntity.ok(usuarioOpt);
     }
 }

@@ -40,8 +40,8 @@ public class Usuario {
     private String idade;
 
     @ManyToOne
-    @JoinColumn(name = "id_endereco", referencedColumnName = "id_endereco", nullable = false)
-    private com.mapadavida.mdvBackend.models.entities.Endereco endereco;
+    @JoinColumn(name = "id_endereco", referencedColumnName = "id_endereco", nullable = true)
+    private Endereco endereco;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_usuario", nullable = false)

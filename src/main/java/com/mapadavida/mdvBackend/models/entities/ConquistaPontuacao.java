@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-// O banco definido nas migrations possui a tabela `conquista_pontuacao` (sem prefixo `tb_`).
-// Ajustei o mapeamento para refletir o esquema de migração.
 @Table(name = "conquista_pontuacao")
 public class ConquistaPontuacao {
     @Id

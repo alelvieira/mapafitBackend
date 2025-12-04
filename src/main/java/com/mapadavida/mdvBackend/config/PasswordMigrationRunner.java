@@ -19,7 +19,6 @@ public class PasswordMigrationRunner implements ApplicationRunner {
     private final PasswordEncoder passwordEncoder;
     private static final Logger logger = LoggerFactory.getLogger(PasswordMigrationRunner.class);
 
-    // BCrypt hashes start with $2a$, $2b$ or $2y$
     private static final Pattern BCRYPT_PATTERN = Pattern.compile("\\A\\$2[aby]\\$.{56}\\z");
 
     public PasswordMigrationRunner(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
@@ -35,17 +34,13 @@ public class PasswordMigrationRunner implements ApplicationRunner {
                 String senha = u.getSenha();
                 if (senha == null || senha.isBlank()) continue;
 
-                // se já é BCrypt, pule
                 if (BCRYPT_PATTERN.matcher(senha).matches()) continue;
 
-                // Caso a senha pareça já ser um SHA-256 hex (64 chars hex), salve como-is
                 if (senha.matches("[0-9a-fA-F]{64}")) {
-                    // SHA-256 - não podemos reverter para a senha original. Recomendamos reset de senha.
                     logger.info("Usuário {} possui senha SHA-256; recomendar reset de senha", u.getEmail());
                     continue;
                 }
 
-                // Senha aparentemente em plain-text -> migrar para BCrypt
                 String encoded = passwordEncoder.encode(senha);
                 u.setSenha(encoded);
                 usuarioRepository.save(u);
