@@ -1,2 +1,2 @@
 # mdvBackend
-Backend do projeto Mapa da Vida
+Backend do projeto Mapafit
