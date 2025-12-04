@@ -18,14 +18,13 @@ public class EnderecoDTO {
     private BigDecimal latitude;
     private BigDecimal longitude;
 
-    public EnderecoDTO() {}
-
     public EnderecoDTO(Endereco endereco) {
         if (endereco != null) {
             this.id = endereco.getId();
             this.rua = endereco.getRua();
             this.cidade = endereco.getCidade();
-            this.estado = endereco.getEstado();
+            // Sempre retorna a sigla UF (normalizada) para a API
+            this.estado = Endereco.toUf(endereco.getEstado());
             this.numero = endereco.getNumero();
             this.cep = endereco.getCep();
 

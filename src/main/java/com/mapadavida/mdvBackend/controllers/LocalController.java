@@ -2,55 +2,68 @@ package com.mapadavida.mdvBackend.controllers;
 
 import com.mapadavida.mdvBackend.models.dto.EnderecoDTO;
 import com.mapadavida.mdvBackend.models.dto.LocalDTO;
-import com.mapadavida.mdvBackend.models.entities.Endereco;
-import com.mapadavida.mdvBackend.models.entities.TipoAcesso;
-import com.mapadavida.mdvBackend.models.entities.TipoAtividade;
-import com.mapadavida.mdvBackend.models.entities.TipoLocal;
+import com.mapadavida.mdvBackend.models.entities.*;
 import com.mapadavida.mdvBackend.repositories.TipoAcessoRepository;
 import com.mapadavida.mdvBackend.repositories.TipoAtividadeRepository;
 import com.mapadavida.mdvBackend.repositories.TipoLocalRepository;
 import com.mapadavida.mdvBackend.services.EnderecoService;
 import com.mapadavida.mdvBackend.services.LocalService;
+import com.mapadavida.mdvBackend.services.TipoAcessoService;
+import com.mapadavida.mdvBackend.services.TipoAtividadeService;
+import com.mapadavida.mdvBackend.services.TipoLocalService;
+import com.mapadavida.mdvBackend.services.GeocodingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/local")
+@RequestMapping("/locais")
 public class LocalController {
+
+    @Value("${GOOGLE_API_KEY:${google.api.key:}}")
+    private String googleApiKey; // kept for backward-compatibility in properties if needed elsewhere
 
     private final LocalService localService;
     private final EnderecoService enderecoService;
+    private final GeocodingService geocodingService;
+
+    @Autowired private TipoLocalRepository tipoLocalRepository;
+    @Autowired private TipoAtividadeRepository tipoAtividadeRepository;
+    @Autowired private TipoAcessoRepository tipoAcessoRepository;
+
+    @Autowired private TipoLocalService tipoLocalService;
+    @Autowired private TipoAtividadeService tipoAtividadeService;
+    @Autowired private TipoAcessoService tipoAcessoService;
 
     @Autowired
-    private TipoLocalRepository tipoLocalRepository;
-
-    @Autowired
-    private TipoAtividadeRepository tipoAtividadeRepository;
-
-    @Autowired
-    private TipoAcessoRepository tipoAcessoRepository;
-
-    @Autowired
-    public LocalController(LocalService localService, EnderecoService enderecoService) {
+    public LocalController(LocalService localService, EnderecoService enderecoService, GeocodingService geocodingService) {
         this.localService = localService;
         this.enderecoService = enderecoService;
+        this.geocodingService = geocodingService;
     }
 
     @GetMapping
-    public ResponseEntity<List<LocalDTO>> getAllLocais() {
-        List<LocalDTO> locais = localService.getLocais();
+    public ResponseEntity<List<LocalDTO>> getAllLocais(
+            @RequestParam(name = "latitude", required = false) Double latitude,
+            @RequestParam(name = "longitude", required = false) Double longitude) {
+
+        if ((latitude == null && longitude != null) || (latitude != null && longitude == null)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<LocalDTO> locais = localService.getLocais(latitude, longitude);
         return ResponseEntity.ok(locais);
     }
 
+    @GetMapping("/aprovados")
+    public List<Local> getAprovados() {
+        return localService.listarAprovados();
+    }
 
     @GetMapping("/tipo_local/{id}")
     public ResponseEntity<List<LocalDTO>> getLocaisByTipo(@PathVariable Long id) {
@@ -70,21 +83,6 @@ public class LocalController {
         return ResponseEntity.ok(locais);
     }
 
-    @GetMapping("/tipo_local")
-    public ResponseEntity<List<TipoLocal>> listarTiposLocais() {
-        return ResponseEntity.ok(tipoLocalRepository.findAll());
-    }
-
-    @GetMapping("/tipo_atividade")
-    public ResponseEntity<List<TipoAtividade>> listarTiposAtividades() {
-        return ResponseEntity.ok(tipoAtividadeRepository.findAll());
-    }
-
-    @GetMapping("/tipo_acesso")
-    public ResponseEntity<List<TipoAcesso>> listarTiposAcesso() {
-        return ResponseEntity.ok(tipoAcessoRepository.findAll());
-    }
-
     @GetMapping("/proximos")
     public ResponseEntity<List<LocalDTO>> buscarProximos(@RequestParam double latitude,
                                                             @RequestParam double longitude,
@@ -99,14 +97,28 @@ public class LocalController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
-        Endereco endereco = enderecoService.salvarEndereco(enderecoDTO, enderecoDTO.getLatitude().doubleValue(), enderecoDTO.getLongitude().doubleValue());
+        Endereco endereco = enderecoService.salvarEndereco(enderecoDTO,
+                enderecoDTO.getLatitude().doubleValue(),
+                enderecoDTO.getLongitude().doubleValue());
+
         return ResponseEntity.status(HttpStatus.CREATED).body(new EnderecoDTO(endereco));
     }
 
     @PostMapping
     public ResponseEntity<LocalDTO> createLocal(@RequestBody LocalDTO localDTO) {
+        System.out.println(">>> Recebido novo local: " + localDTO.getNome());
+
         if (localDTO.getEndereco() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        // normalizar e validar estado antes de persistir
+        if (localDTO.getEndereco().getEstado() != null) {
+            String estadoNorm = Endereco.normalizeEstado(localDTO.getEndereco().getEstado());
+            if (estadoNorm == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+            localDTO.getEndereco().setEstado(estadoNorm);
         }
 
         if (localDTO.getEndereco().getId() == null) {
@@ -122,36 +134,146 @@ public class LocalController {
 
     @PutMapping("/{id}")
     public ResponseEntity<LocalDTO> updateLocal(@PathVariable Long id, @RequestBody LocalDTO dto) {
-        LocalDTO updated = localService.updateLocal(id, dto);
-        return ResponseEntity.ok(updated);
+        // normalizar estado com utilitário
+        if (dto != null && dto.getEndereco() != null && dto.getEndereco().getEstado() != null) {
+            dto.getEndereco().setEstado(com.mapadavida.mdvBackend.models.entities.Endereco.normalizeEstado(dto.getEndereco().getEstado()));
+            if (dto.getEndereco().getEstado() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+        }
+
+        return ResponseEntity.ok(localService.updateLocal(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLocal(@PathVariable Long id) {
+        localService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/geocode")
     public ResponseEntity<?> geocode(@RequestParam String endereco) {
-        String apiKey = "AIzaSyCtblRaM76V0Qdyea2f34MPYFmQNbzb9Eo";
-        String url = "https://maps.googleapis.com/maps/api/geocode/json?address="
-                + URLEncoder.encode(endereco, StandardCharsets.UTF_8)
-                + "&key=" + apiKey;
+        return geocodingService.geocode(endereco);
+    }
 
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+    // TipoLocal
+    @PostMapping("/tipo-local")
+    public ResponseEntity<TipoLocal> createTipoLocal(@RequestBody TipoLocal tipoLocal) {
+        TipoLocal saved = tipoLocalService.save(tipoLocal);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
 
-        if (response.getStatusCode().is2xxSuccessful()) {
-            List results = (List) response.getBody().get("results");
-            if (!results.isEmpty()) {
-                Map geometry = (Map) ((Map) results.get(0)).get("geometry");
-                Map location = (Map) geometry.get("location");
+    @GetMapping("/tipo-local")
+    public ResponseEntity<List<TipoLocal>> getAllTipoLocal() {
+        List<TipoLocal> list = tipoLocalService.findAll();
+        return ResponseEntity.ok(list);
+    }
 
-                double lat = (double) location.get("lat");
-                double lng = (double) location.get("lng");
-
-                return ResponseEntity.ok(Map.of("latitude", lat, "longitude", lng));
-            }
+    @PutMapping("/tipo-local/{id}")
+    public ResponseEntity<TipoLocal> updateTipoLocal(@PathVariable Long id, @RequestBody TipoLocal tipoLocal) {
+        if (!tipoLocalRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
         }
+        TipoLocal updated = tipoLocalService.update(id, tipoLocal);
+        return ResponseEntity.ok(updated);
+    }
 
-        return ResponseEntity.status(404).body(Map.of("error", "Endereço não encontrado"));
+    @GetMapping("/tipo-local/{id}")
+    public ResponseEntity<TipoLocal> getTipoLocalById(@PathVariable Long id) {
+        return tipoLocalService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/tipo-local/{id}")
+    public ResponseEntity<Void> deleteTipoLocal(@PathVariable Long id) {
+        if (!tipoLocalRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        tipoLocalService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
 
+    // TipoAtividade
+    @PostMapping("/tipo-atividade")
+    public ResponseEntity<TipoAtividade> createTipoAtividade(@RequestBody TipoAtividade tipoAtividade) {
+        TipoAtividade saved = tipoAtividadeService.save(tipoAtividade);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
 
+    @GetMapping("/tipo-atividade")
+    public ResponseEntity<List<TipoAtividade>> getAllTipoAtividade() {
+        List<TipoAtividade> list = tipoAtividadeService.findAll();
+        return ResponseEntity.ok(list);
+    }
+
+    @PutMapping("/tipo-atividade/{id}")
+    public ResponseEntity<TipoAtividade> updateTipoAtividade(@PathVariable Long id, @RequestBody TipoAtividade tipoAtividade) {
+        if (!tipoAtividadeRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        TipoAtividade updated = tipoAtividadeService.update(id, tipoAtividade);
+        return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/tipo-atividade/{id}")
+    public ResponseEntity<TipoAtividade> getTipoAtividadeById(@PathVariable Long id) {
+        return tipoAtividadeService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/tipo-atividade/{id}")
+    public ResponseEntity<Void> deleteTipoAtividade(@PathVariable Long id) {
+        if (!tipoAtividadeRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        tipoAtividadeService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // TipoAcesso
+    @PostMapping("/tipo-acesso")
+    public ResponseEntity<TipoAcesso> createTipoAcesso(@RequestBody TipoAcesso tipoAcesso) {
+        TipoAcesso saved = tipoAcessoService.save(tipoAcesso);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    @GetMapping("/tipo-acesso")
+    public ResponseEntity<List<TipoAcesso>> getAllTipoAcesso() {
+        List<TipoAcesso> list = tipoAcessoService.findAll();
+        return ResponseEntity.ok(list);
+    }
+
+    @PutMapping("/tipo-acesso/{id}")
+    public ResponseEntity<TipoAcesso> updateTipoAcesso(@PathVariable Long id, @RequestBody TipoAcesso tipoAcesso) {
+        if (!tipoAcessoRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        // reutiliza save/update do service: implementa atualização simples
+        var existing = tipoAcessoService.findById(id);
+        if (existing.isEmpty()) return ResponseEntity.notFound().build();
+        TipoAcesso toSave = existing.get();
+        toSave.setNome(tipoAcesso.getNome());
+        TipoAcesso updated = tipoAcessoService.save(toSave);
+        return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/tipo-acesso/{id}")
+    public ResponseEntity<TipoAcesso> getTipoAcessoById(@PathVariable Long id) {
+        return tipoAcessoService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/tipo-acesso/{id}")
+    public ResponseEntity<Void> deleteTipoAcesso(@PathVariable Long id) {
+        var tipoAcesso = tipoAcessoRepository.findById(id);
+        if (tipoAcesso.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        tipoAcessoService.delete(tipoAcesso.get());
+        return ResponseEntity.noContent().build();
+    }
 }

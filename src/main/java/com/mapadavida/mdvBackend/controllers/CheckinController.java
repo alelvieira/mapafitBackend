@@ -1,93 +1,86 @@
 package com.mapadavida.mdvBackend.controllers;
 
+import com.mapadavida.mdvBackend.models.dto.CheckinDTO;
 import com.mapadavida.mdvBackend.models.entities.Checkin;
-import com.mapadavida.mdvBackend.models.entities.Local;
-import com.mapadavida.mdvBackend.models.entities.TipoAtividade;
-import com.mapadavida.mdvBackend.models.entities.Usuario;
 import com.mapadavida.mdvBackend.repositories.CheckinRepository;
-import com.mapadavida.mdvBackend.services.LocalService;
-import com.mapadavida.mdvBackend.services.TipoAtividadeService;
-import com.mapadavida.mdvBackend.services.UsuarioService;
+import com.mapadavida.mdvBackend.services.CheckinService;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import java.time.LocalDateTime;
 import java.time.Duration;
-import java.util.Optional;
+import java.util.List;
+import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/checkins")
+@CrossOrigin
 public class CheckinController {
 
-    private final CheckinRepository checkinRepository;
-    private final UsuarioService usuarioService;
-    private final LocalService locaisService;
-    private final TipoAtividadeService tipoAtividadeService;
-
-    public CheckinController(CheckinRepository checkinRepository, UsuarioService usuarioService, LocalService locaisService, TipoAtividadeService tipoAtividadeService) {
-        this.checkinRepository = checkinRepository;
-        this.usuarioService = usuarioService;
-        this.locaisService = locaisService;
-        this.tipoAtividadeService = tipoAtividadeService;
-    }
+    @Autowired
+    private CheckinService checkinService;
+    @Autowired
+    private CheckinRepository checkinRepository; // Kept for read-only status check
 
     @PostMapping("/checkin")
-    public ResponseEntity<Checkin> checkIn(
+    public ResponseEntity<CheckinDTO> checkIn(
             @RequestParam Long userId,
             @RequestParam Long localId,
             @RequestParam Long tipoAtividadeId) {
-
-        Optional<Local> local = locaisService.getLocalById(localId);
-        Optional<Usuario> usuario = usuarioService.getUsuarioById(userId);
-        Optional<TipoAtividade> tipoAtividade = tipoAtividadeService.findById(tipoAtividadeId);
-
-        if (local.isPresent() && usuario.isPresent() && tipoAtividade.isPresent()) {
-            Checkin checkin = new Checkin();
-            checkin.setUsuario(usuario.get());
-            checkin.setTipoAtividade(tipoAtividade.get());
-            checkin.setLocal(local.get());
-            checkinRepository.save(checkin);
-            checkin.setInicio(LocalDateTime.now());
-
-            Checkin savedCheckin = checkinRepository.save(checkin);
-
-            return ResponseEntity.ok(savedCheckin);
-
+        try {
+            CheckinDTO checkinDTO = checkinService.performCheckIn(userId, localId, tipoAtividadeId);
+            return ResponseEntity.ok(checkinDTO);
+        } catch (EntityNotFoundException e) {
+            log.error("EntityNotFoundException: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<Checkin> checkOut(@RequestParam Long checkinId) {
-        // Buscar o checkin pelo ID
-        Checkin checkin = checkinRepository.findById(checkinId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Checkin not found"));
-
-        // Definir o horário de fim e atualizar o checkin
-        checkin.setFim(LocalDateTime.now());
-        Checkin updatedCheckin = checkinRepository.save(checkin);
-
-        // Retornar o objeto atualizado como resposta
-        return ResponseEntity.ok(updatedCheckin);
+    public ResponseEntity<CheckinDTO> checkOut(@RequestParam Long checkinId) {
+        try {
+            CheckinDTO updatedCheckinDTO = checkinService.performCheckOut(checkinId);
+            return ResponseEntity.ok(updatedCheckinDTO);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/checkin-status")
-    public ResponseEntity<String> checkInStatus(@RequestParam Long checkinId) {
-        // Buscar o checkin pelo ID
+    public ResponseEntity<Map<String, String>> checkInStatus(@RequestParam Long checkinId) {
         Checkin checkin = checkinRepository.findById(checkinId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Checkin not found"));
 
-        // Verificar o status do checkin
         LocalDateTime now = LocalDateTime.now();
-        Duration duration = Duration.between(checkin.getInicio(), now);
 
         if (checkin.getFim() != null) {
-            return ResponseEntity.ok("Checked out already");
-        } else if (duration.toMinutes() >= 10) {
-            return ResponseEntity.ok("Enable checkout");
+            return ResponseEntity.ok(Map.of("status", "Checked out already"));
+        }
+
+        Duration duration = Duration.between(checkin.getInicio(), now);
+        if (duration.toMinutes() >= 1) {
+
+            return ResponseEntity.ok(Map.of("status", "Enable checkout"));
         } else {
-            return ResponseEntity.ok("Still within check-in time");
+            return ResponseEntity.ok(Map.of("status","Still within check-in time"));
         }
     }
+
+    @GetMapping
+    public ResponseEntity<List<CheckinDTO>> checkIn(
+            @RequestParam Long userId) {
+        try {
+            List<CheckinDTO> checkinDTO = checkinService.findCheckIns(userId);
+            return ResponseEntity.ok(checkinDTO);
+        } catch (EntityNotFoundException e) {
+            log.error("EntityNotFoundException: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

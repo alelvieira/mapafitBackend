@@ -9,7 +9,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.BeanUtils;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -28,6 +30,9 @@ public class Usuario {
     @Column(name = "email_usuario", nullable = true, unique = true)
     private String email;
 
+    @Column(name = "telefone_usuario")
+    private String telefone;
+
     @Column(name = "sexo_usuario")
     private String sexo;
 
@@ -35,8 +40,8 @@ public class Usuario {
     private String idade;
 
     @ManyToOne
-    @JoinColumn(name = "id_endereco", referencedColumnName = "id_endereco", nullable = false)
-    private com.mapadavida.mdvBackend.models.entities.Endereco endereco;
+    @JoinColumn(name = "id_endereco", referencedColumnName = "id_endereco", nullable = true)
+    private Endereco endereco;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_usuario", nullable = false)
@@ -45,9 +50,22 @@ public class Usuario {
     @Column(name = "senha_usuario", nullable = false)
     private String senha;
 
-    @OneToMany(mappedBy = "usuario")
-    private List<com.mapadavida.mdvBackend.models.entities.Avaliacao> avaliacoes;
+    @Column(name = "foto_url")
+    private String fotoUrl;
 
+    @Column(name = "pontos")
+    private Integer pontos = 0;
+
+    @OneToMany(mappedBy = "usuario")
+    private List<Avaliacao> avaliacoes;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "tb_usuario_conquista",
+            joinColumns = @JoinColumn(name = "id_usuario"),
+            inverseJoinColumns = @JoinColumn(name = "id_conquista")
+    )
+    private Set<Conquista> conquistas = new HashSet<>();
     public Usuario(UsuarioDTO usuarioDTO){
         BeanUtils.copyProperties(usuarioDTO, this);
     }

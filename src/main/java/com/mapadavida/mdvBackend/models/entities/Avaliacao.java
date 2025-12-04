@@ -1,14 +1,12 @@
 package com.mapadavida.mdvBackend.models.entities;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import com.mapadavida.mdvBackend.models.enums.TipoUsuario;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-
 @Entity
+@Getter
+@Setter
 @Table(name = "tb_avaliacao")
 public class Avaliacao {
 

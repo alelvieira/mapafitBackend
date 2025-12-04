@@ -18,4 +18,7 @@ public interface LocalRepository extends JpaRepository<Local,Long> {
     List<Local> findByTipoAcessoId(Long id);
 
     List<Local> findByEnderecoId(Long id);
+
+    List<Local> findByAprovadoTrue();
+
 }

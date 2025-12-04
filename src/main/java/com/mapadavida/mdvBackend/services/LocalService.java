@@ -4,6 +4,7 @@ import com.mapadavida.mdvBackend.models.dto.EnderecoDTO;
 import com.mapadavida.mdvBackend.models.dto.LocalDTO;
 import com.mapadavida.mdvBackend.models.entities.*;
 import com.mapadavida.mdvBackend.repositories.*;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +33,25 @@ public class LocalService {
 
 
     public List<LocalDTO> getLocais() {
+        return getLocais(null, null);
+    }
+
+    public List<LocalDTO> getLocais(Double latitude, Double longitude) {
         List<LocalDTO> locais = localRepository.findAll().stream().map(LocalDTO::new).toList();
+
+        if (latitude != null && longitude != null) {
+            for (LocalDTO local : locais) {
+                if (local.getEndereco() != null) {
+                    int distancia = enderecoService.calcularDistancia(
+                        latitude,
+                        longitude,
+                        local.getEndereco()
+                    );
+                    local.setDistancia(distancia);
+                }
+            }
+        }
+
         return locais;
     }
 
@@ -63,24 +82,31 @@ public class LocalService {
         if (localDTO.getTipoLocalId() != null) {
             TipoLocal tipoLocal = tipoLocalRepository.findById(localDTO.getTipoLocalId())
                     .orElseThrow(() -> new RuntimeException("TipoLocal não encontrado"));
+
             if (localDTO.getTipoAtividadeId() != null) {
                 TipoAtividade tipoAtividade = tipoAtividadeRepository.findById(localDTO.getTipoAtividadeId())
                         .orElseThrow(() -> new RuntimeException("TipoAtividade não encontrado"));
+
                 if (localDTO.getTipoAcessoId() != null) {
                     TipoAcesso tipoAcesso = tipoAcessoRepository.findById(localDTO.getTipoAcessoId())
                             .orElseThrow(() -> new RuntimeException("TipoAcesso não encontrado"));
 
-                    Endereco endereco = enderecoService.salvarEndereco(localDTO.getEndereco(), localDTO.getEndereco().getLatitude().doubleValue(), localDTO.getEndereco().getLongitude().doubleValue());
-                    Local local = new Local(localDTO, endereco,  tipoAtividade, tipoAcesso, tipoLocal);
+                    EnderecoDTO enderecoDTO = localDTO.getEndereco();
+                    Endereco endereco = new Endereco(enderecoDTO); // Usa o construtor correto
+                    endereco = enderecoRepository.save(endereco); // Persiste para evitar o erro de "detached entity"
 
-                    localRepository.save(local);
+                    Local local = new Local(localDTO, endereco, tipoAtividade, tipoAcesso, tipoLocal);
+                    local = localRepository.save(local);
 
                     return new LocalDTO(local);
                 }
             }
         }
+
         return localDTO;
     }
+
+
 
     public List<LocalDTO> findLocaisProximos(double latitude, double longitude, double raio) {
 
@@ -98,39 +124,45 @@ public class LocalService {
     }
 
     public LocalDTO updateLocal(Long id, LocalDTO dto) {
-        Local local = localRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Local não encontrado"));
+        return localRepository.findById(id).map(local -> {
+            local.setNome(dto.getNome());
+            local.setAprovado(dto.isAprovado());
+            local.setTipoLocal(tipoLocalRepository.findById(dto.getTipoLocalId()).orElse(null));
+            local.setTipoAtividade(tipoAtividadeRepository.findById(dto.getTipoAtividadeId()).orElse(null));
+            local.setTipoAcesso(tipoAcessoRepository.findById(dto.getTipoAcessoId()).orElse(null));
+            local.setHorariosFuncionamento(dto.getHorariosFuncionamento());
+            local.setInformacoesAdicionais(dto.getInformacoesAdicionais());
 
-        local.setNome(dto.getNome());
-        local.setAprovado(dto.isAprovado());
-        local.setHorariosFuncionamento(dto.getHorariosFuncionamento());
-        local.setInformacoesAdicionais(dto.getInformacoesAdicionais());
+            Endereco endereco = local.getEndereco();
+            if (endereco != null) {
+                endereco.setRua(dto.getEndereco().getRua());
+                endereco.setNumero(dto.getEndereco().getNumero());
+                endereco.setCidade(dto.getEndereco().getCidade());
+                endereco.setEstado(dto.getEndereco().getEstado());
+                endereco.setCep(dto.getEndereco().getCep());
 
-        if (dto.getTipoAtividadeId() != null) {
-            local.setTipoAtividade(tipoAtividadeRepository.findById(dto.getTipoAtividadeId())
-                    .orElse(null));
-        }
+                if (dto.getEndereco().getLatitude() != null && dto.getEndereco().getLongitude() != null) {
+                    endereco.setLatitudeLongitude(
+                            dto.getEndereco().getLatitude().doubleValue(),
+                            dto.getEndereco().getLongitude().doubleValue()
+                    );
+                }
+            }
 
-        if (dto.getTipoAcessoId() != null) {
-            local.setTipoAcesso(tipoAcessoRepository.findById(dto.getTipoAcessoId())
-                    .orElse(null));
-        }
-
-        if (dto.getTipoLocalId() != null) {
-            local.setTipoLocal(tipoLocalRepository.findById(dto.getTipoLocalId())
-                    .orElse(null));
-        }
-
-        if (dto.getEndereco() != null && dto.getEndereco().getId() != null) {
-            Endereco endereco = enderecoRepository.findById(dto.getEndereco().getId())
-                    .orElse(null);
-            local.setEndereco(endereco);
-        }
-
-        Local atualizado = localRepository.save(local);
-        return new LocalDTO(atualizado);
+            localRepository.save(local);
+            return new LocalDTO(local);
+        }).orElseThrow(() -> new RuntimeException("Local não encontrado"));
     }
 
+    public List<Local> listarAprovados() {
+        return localRepository.findByAprovadoTrue();
+    }
+
+    public void deletar(Long id) {
+        localRepository.findById(id).ifPresent(local -> {
+            localRepository.delete(local); // apenas o local, não o endereço
+        });
+    }
 
 
 }
