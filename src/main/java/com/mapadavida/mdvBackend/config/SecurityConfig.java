@@ -40,7 +40,6 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 🔓 Rotas públicas (sem autenticação)
                         .requestMatchers(
                                 "/usuarios/login",
                                 "/usuarios/cadastrar",
@@ -52,19 +51,12 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
 
-                        // Allow CORS preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Allow public GET access to tipos endpoints used by the frontend (and permit error path)
                         .requestMatchers(HttpMethod.GET, "/locais/**").permitAll()
                         .requestMatchers("/error").permitAll()
-
-                        // Rotas restritas a admin (exemplo seu)
                         .requestMatchers("/api/cache/**").hasRole("ADMIN")
-
-                        // 🔒 Qualquer outra rota exige login via JWT
                         .anyRequest().authenticated()
                 )
-                // Filtro JWT antes do filtro padrão do Spring
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -79,7 +71,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*")); // Em produção, substitua por origens específicas
+        configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "authorization", "content-type", "x-auth-token", "x-requested-with", "accept"));
         configuration.setExposedHeaders(Arrays.asList("x-auth-token", "Authorization"));
@@ -90,22 +82,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Use BCrypt for password hashing in production
         return new BCryptPasswordEncoder();
     }
 }
-
-
-// return http
-//         .csrf(csrf -> csrf.disable())
-//        .cors(Customizer.withDefaults()) // ✅ CORS habilitado
-//        .authorizeHttpRequests(auth -> auth
-//        .requestMatchers("/login", "/usuarios", "/usuarios/login", "/local/geocode", "/local/geocode/", "/error").permitAll()
-//                        .requestMatchers(HttpMethod.GET, "/local/", "/usuarios/").permitAll()
-//                        .requestMatchers(HttpMethod.POST, "/local", "/local/", "/usuarios/", "/usuarios").permitAll()
-//                        .requestMatchers(HttpMethod.PUT, "/local/", "/usuarios/").permitAll()
-//                        .requestMatchers(HttpMethod.DELETE, "/local/", "/usuarios/", "/usuarios").permitAll()
-//                        .anyRequest().authenticated()
-//                )
-//                        .build();
-//    }

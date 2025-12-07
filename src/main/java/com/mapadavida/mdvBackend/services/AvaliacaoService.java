@@ -35,9 +35,7 @@ public class AvaliacaoService {
     public AvaliacaoResponseDTO create(AvaliacaoDTO dto) {
         avaliacaoRepository.findByUsuarioIdAndLocalId(dto.getUsuarioId(), dto.getLocalId())
                 .ifPresent(a -> {
-                    return new AvaliacaoResponseDTO(a.);
-
-                   //  throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário já possui uma avaliação para este local.");
+                     throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário já possui uma avaliação para este local.");
                 });
 
         Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
