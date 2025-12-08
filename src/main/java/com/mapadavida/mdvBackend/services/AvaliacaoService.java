@@ -91,5 +91,4 @@ public class AvaliacaoService {
     public List<AvaliacaoResponseDTO> findByUsuario(Long usuarioId) {
         return avaliacaoRepository.findAllByUsuarioId(usuarioId).stream().map(AvaliacaoResponseDTO::new).collect(Collectors.toList());
     }
-
 }
