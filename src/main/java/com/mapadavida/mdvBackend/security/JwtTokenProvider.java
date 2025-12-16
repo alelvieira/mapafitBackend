@@ -27,12 +27,9 @@ public class JwtTokenProvider {
 
     @PostConstruct
     protected void init() {
-        // Gera uma chave segura para o algoritmo HS512
         if (jwtSecret == null || jwtSecret.length() < 64) {
-            // Se a chave for muito curta, gera uma nova chave segura
             this.key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
         } else {
-            // Usa a chave fornecida se for longa o suficiente
             this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
         }
     }

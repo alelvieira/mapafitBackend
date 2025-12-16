@@ -3,9 +3,7 @@ package com.mapadavida.mdvBackend.controllers;
 import com.mapadavida.mdvBackend.models.dto.AvaliacaoDTO;
 import com.mapadavida.mdvBackend.models.dto.AvaliacaoResponseDTO;
 import com.mapadavida.mdvBackend.models.dto.AvaliacaoUpdateDTO;
-import com.mapadavida.mdvBackend.models.entities.Avaliacao;
 import com.mapadavida.mdvBackend.services.AvaliacaoService;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,22 +30,14 @@ public class AvaliacaoController {
 
     @PutMapping("/{id}")
     public ResponseEntity<AvaliacaoResponseDTO> update(@PathVariable Long id, @RequestBody AvaliacaoUpdateDTO dto) {
-        try {
-            AvaliacaoResponseDTO avaliacaoAtualizada = avaliacaoService.update(id, dto);
-            return ResponseEntity.ok(avaliacaoAtualizada);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        AvaliacaoResponseDTO avaliacaoAtualizada = avaliacaoService.update(id, dto);
+        return ResponseEntity.ok(avaliacaoAtualizada);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<AvaliacaoResponseDTO> getById(@PathVariable Long id) {
-        try {
-            AvaliacaoResponseDTO avaliacao = avaliacaoService.findById(id);
-            return ResponseEntity.ok(avaliacao);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        AvaliacaoResponseDTO avaliacao = avaliacaoService.findById(id);
+        return ResponseEntity.ok(avaliacao);
     }
 
     @GetMapping

@@ -288,7 +288,7 @@ public class UsuarioController{
     }
 
     @PostMapping("/{userId}/foto")
-    public ResponseEntity<Map<String, Object>> uploadFoto(@PathVariable Long userId, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Map<String, Object>> uploadFoto(@PathVariable Long userId, @RequestParam("foto") MultipartFile file) {
         try {
             String fileUrl = fileStorageService.storeFile(file, userId);
             UsuarioDTO usuarioAtualizadoDTO = usuarioService.updateFoto(userId, fileUrl);
@@ -302,9 +302,8 @@ public class UsuarioController{
         }
     }
 
-    // Convenience endpoint: upload photo for currently authenticated user (uses JWT)
     @PostMapping("/me/foto")
-    public ResponseEntity<Map<String, Object>> uploadFotoMe(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Map<String, Object>> uploadFotoMe(@RequestParam("foto") MultipartFile file) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getPrincipal() == null || !(auth.getPrincipal() instanceof UserPrincipal)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -357,3 +356,4 @@ public class UsuarioController{
         return ResponseEntity.ok(usuarioOpt);
     }
 }
+

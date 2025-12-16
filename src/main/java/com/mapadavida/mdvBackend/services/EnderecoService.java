@@ -87,26 +87,21 @@ public class EnderecoService {
         double latitude2 = enderecoDTO.getLatitude().doubleValue();
         double longitude2 = enderecoDTO.getLongitude().doubleValue();
 
-        // Raio da Terra em metros
         final int R = 6371000;
 
-        // Converter graus para radianos
         double lat1 = Math.toRadians(latitude1);
         double lon1 = Math.toRadians(longitude1);
         double lat2 = Math.toRadians(latitude2);
         double lon2 = Math.toRadians(longitude2);
 
-        // Diferenças nas coordenadas
         double dLat = lat2 - lat1;
         double dLon = lon2 - lon1;
 
-        // Fórmula de Haversine
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
                   Math.cos(lat1) * Math.cos(lat2) *
                   Math.sin(dLon / 2) * Math.sin(dLon / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        // Distância em metros
         double distance = R * c;
 
         return (int) Math.round(distance);
