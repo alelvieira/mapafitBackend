@@ -31,7 +31,7 @@ Backend do projeto Mapafit — API REST construída em Java com Spring Boot para
 3. Build e execução:
 mvn clean package
 mvn spring-boot:run
-# ou
+ ou
 java -jar target/*.jar
 
 ## Configuração (exemplo)
