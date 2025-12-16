@@ -1,4 +1,4 @@
-# mdvBackend
+# mapafitBackend
 Backend do projeto Mapafit — API REST construída em Java com Spring Boot para gerenciar usuários, rotas e dados de treino.
 
 ## Tecnologias
